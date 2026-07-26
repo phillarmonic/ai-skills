@@ -24,9 +24,10 @@ repertoire list
 repertoire catalog list
 ```
 
-Inside a Git worktree, Repertoire uses project state by default. Outside a
-worktree, it uses user-global state. Pass `--project` or `--global` when the
-intended scope is not obvious; never combine them.
+Commands default to user-global scope and install into home-directory skill
+roots. Use `--project` when a skill should live in the current Git worktree.
+`--global` makes the default explicit. Never combine `--project` and
+`--global`.
 
 Use Repertoire commands instead of manually editing generated
 `repertoire.lock.json` files or managed skill copies.
@@ -77,7 +78,8 @@ repertoire install --target all
 
 Without `--target`, Repertoire detects existing agent configuration or skill
 directories. Use `--target all` only when copies should be created for every
-supported target even if its directory does not yet exist.
+supported target even if its directory does not yet exist. Pass `--project` to
+install into the Git worktree instead of the home directory.
 
 ## Configure catalogs
 
@@ -115,13 +117,12 @@ catalogs:
 
 skills:
   zensical:
-    scope: project
     targets: [codex]
 
-  code-reviewer:
+  shared-helpers:
     catalog: company
-    scope: global
-    targets: [codex, claude]
+    scope: project
+    targets: [agents]
 ```
 
 Then run:
@@ -130,10 +131,12 @@ Then run:
 repertoire bootstrap
 ```
 
-`bootstrap` installs or repairs declared copies using current catalog state.
-Run `repertoire sync` when catalogs should be refreshed before synchronizing
-the bootstrap declarations. Removing a declaration does not uninstall an
-existing skill; use `repertoire remove <skill>` explicitly.
+Omitted `scope` defaults to `global`. Use `scope: project` only when the skill
+should be installed inside the Git worktree. `bootstrap` installs or repairs
+declared copies using current catalog state. Run `repertoire sync` when catalogs
+should be refreshed before synchronizing the bootstrap declarations. Removing a
+declaration does not uninstall an existing skill; use `repertoire remove
+<skill>` explicitly.
 
 ## Update, repair, and remove
 

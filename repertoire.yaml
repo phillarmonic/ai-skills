@@ -1,0 +1,7 @@
+schema: 1
+catalog:
+  name: phillarmonic
+  description: Portable AI agent skills maintained by Phillarmonic
+  skills:
+    zensical:
+      path: skills/zensical

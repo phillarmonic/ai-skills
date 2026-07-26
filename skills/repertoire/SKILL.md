@@ -62,9 +62,14 @@ Use `add` to install a skill and declare it as a requirement:
 
 ```bash
 repertoire add zensical --target codex
+repertoire add github.com/phillarmonic/ai-skills/zensical --target codex
 repertoire add zensical --target codex --target claude
 repertoire add zensical --target all
 ```
+
+Prefer namespaced IDs (`github.com/phillarmonic/ai-skills/zensical`) when a short
+name could be ambiguous. The on-disk install directory remains the short skill
+name (`zensical`).
 
 Use `install <skill>` for a one-off tracked installation when the skill is not
 declared. With no skill name, `install` installs or repairs every declared
@@ -72,6 +77,7 @@ requirement:
 
 ```bash
 repertoire install zensical --target agents
+repertoire install github.com/phillarmonic/ai-skills/zensical --target agents
 repertoire install
 repertoire install --target all
 ```
@@ -105,7 +111,9 @@ repertoire catalog remove company
 
 ## Bootstrap a project
 
-Use `.repertoire.yaml` in a project root for repeatable onboarding:
+Use `.repertoire.yaml` in a project root for repeatable onboarding. Prefer
+namespaced skill IDs and `scope: global` so the manifest stays in the repo while
+skills install under home-directory agent roots:
 
 ```yaml
 schema: 1
@@ -116,7 +124,8 @@ catalogs:
     ref: main
 
 skills:
-  zensical:
+  github.com/phillarmonic/ai-skills/zensical:
+    scope: global
     targets: [codex]
 
   shared-helpers:
@@ -131,12 +140,14 @@ Then run:
 repertoire bootstrap
 ```
 
-Omitted `scope` defaults to `global`. Use `scope: project` only when the skill
-should be installed inside the Git worktree. `bootstrap` installs or repairs
-declared copies using current catalog state. Run `repertoire sync` when catalogs
-should be refreshed before synchronizing the bootstrap declarations. Removing a
-declaration does not uninstall an existing skill; use `repertoire remove
-<skill>` explicitly.
+If `.repertoire.yaml` is missing, `bootstrap` creates a starter that lists every
+built-in `phillarmonic` skill with namespaced IDs and `scope: global`, then
+installs them. `sync` does not create a missing file. Omitted `scope` defaults
+to `global`. Use `scope: project` only when the skill should be installed inside
+the Git worktree. `bootstrap` installs or repairs declared copies using current
+catalog state. Run `repertoire sync` when catalogs should be refreshed before
+synchronizing the bootstrap declarations. Removing a declaration does not
+uninstall an existing skill; use `repertoire remove <skill>` explicitly.
 
 ## Update, repair, and remove
 

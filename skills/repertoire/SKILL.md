@@ -29,6 +29,11 @@ roots. Use `--project` when a skill should live in the current Git worktree.
 `--global` makes the default explicit. Never combine `--project` and
 `--global`.
 
+Shell completion suggests registries Repertoire already knows (built-in, global
+and project registrations, bootstrap catalogs, lock sources, and cached
+remotes), including source URLs for `catalog add`. Prefer tab-completing those
+known registries instead of inventing catalog names.
+
 Use Repertoire commands instead of manually editing generated
 `repertoire.lock.json` files or managed skill copies.
 
@@ -108,6 +113,69 @@ reference it:
 repertoire list
 repertoire catalog remove company
 ```
+
+## Author a private registry
+
+A private registry is an ordinary Git repository with a `repertoire.yaml` at
+its root. Keep each skill in its own directory and list that contained relative
+path in the catalog manifest:
+
+```text
+company-skills/
+├── repertoire.yaml
+└── skills/
+    ├── code-reviewer/
+    │   ├── SKILL.md
+    │   └── references/
+    └── release-helper/
+        └── SKILL.md
+```
+
+```yaml
+schema: 1
+catalog:
+  name: company
+  description: Private skills maintained by Example Company
+  skills:
+    code-reviewer:
+      path: skills/code-reviewer
+    release-helper:
+      path: skills/release-helper
+```
+
+The catalog name and skill keys must contain 1–64 lowercase letters, digits, or
+single hyphens. Every path must be relative, remain inside the repository, and
+point to a directory containing `SKILL.md`. Each `SKILL.md` needs YAML
+frontmatter whose `name` exactly matches its catalog key and whose `description`
+is non-empty. Keep supporting scripts, references, and assets inside that skill
+directory so Repertoire installs the complete package.
+
+Validate locally before publishing from a disposable Git worktree. Project
+scope keeps both the test registration and installed copy out of the user's
+global Repertoire state:
+
+```bash
+scratch=$(mktemp -d)
+git -C "$scratch" init
+cd "$scratch"
+repertoire --project catalog add /absolute/path/to/company-skills --name company-dev
+repertoire --project list --available --catalog company-dev
+repertoire --project install code-reviewer --catalog company-dev --target agents
+```
+
+Commit and push the repository to a private Git remote, grant users read access,
+then register the remote using SSH or credential-helper-backed HTTPS:
+
+```bash
+git ls-remote git@github.com:example/company-skills.git
+repertoire catalog add git@github.com:example/company-skills.git --name company --ref main
+repertoire list --available --catalog company
+```
+
+Do not embed tokens, passwords, or other credentials in the catalog URL or any
+manifest. Repertoire delegates authentication to Git. Omit `--ref` to track the
+remote default branch; use a branch for updateable releases or a tag/full commit
+for an immutable registry snapshot.
 
 ## Bootstrap a project
 

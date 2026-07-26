@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repertoire"
+  short_description: "Manage portable AI agent skills safely"
+  default_prompt: "Use $repertoire to install and manage the agent skills required by this project."

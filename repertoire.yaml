@@ -3,5 +3,7 @@ catalog:
   name: phillarmonic
   description: Portable AI agent skills maintained by Phillarmonic
   skills:
+    repertoire:
+      path: skills/repertoire
     zensical:
       path: skills/zensical

@@ -29,3 +29,8 @@ repertoire add zensical --catalog phillarmonic
 
 Every listed path must be contained in this repository and contain an Agent
 Skills-compatible `SKILL.md`.
+
+## Available skills
+
+- `repertoire` — install and manage portable AI agent skills with Repertoire.
+- `zensical` — create, configure, build, and troubleshoot Zensical sites.

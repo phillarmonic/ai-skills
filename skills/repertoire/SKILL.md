@@ -5,7 +5,8 @@ description: >-
   with the Repertoire CLI. Use when working with repertoire commands,
   repertoire.yaml, repertoire.lock.json, .repertoire.yaml, skill catalogs,
   project or global skill installation, multi-agent targets, bootstrap or sync
-  workflows, catalog ambiguity, or managed-skill safety errors.
+  workflows, platform variants, managed hooks and project artifacts, catalog
+  ambiguity, or managed-skill safety errors.
 ---
 
 # Repertoire
@@ -74,6 +75,7 @@ repertoire add zensical --target codex
 repertoire add github.com/phillarmonic/ai-skills/zensical --target codex
 repertoire add zensical --target codex --target claude
 repertoire add zensical --target all
+repertoire --project add graphify --target codex --with-hooks
 ```
 
 Prefer source-qualified IDs (`github.com/phillarmonic/ai-skills/zensical`) when
@@ -99,6 +101,12 @@ Without `--target`, Repertoire detects existing agent configuration or skill
 directories. Use `--target all` only when copies should be created for every
 supported target even if its directory does not yet exist. Pass `--project` to
 install into the Git worktree instead of the home directory.
+
+Catalogs may provide managed hooks and project instructions. Interactive `add`
+prompts before installing them. Noninteractive commands skip them unless
+`--with-hooks` is present. Use `--no-hooks` to suppress or remove managed
+artifacts. Repertoire copies hook data but does not execute hooks during
+installation.
 
 ## Configure catalogs
 
@@ -147,6 +155,18 @@ catalog:
   skills:
     code-reviewer:
       path: skills/code-reviewer
+      variants:
+        codex: platforms/codex
+      artifacts:
+        codex:
+          - id: guidance
+            source: project-files/agents.md
+            destination: AGENTS.md
+            mode: markdown-section
+          - id: hooks
+            source: project-files/hooks.json
+            destination: .codex/hooks.json
+            mode: json-merge
     release-helper:
       path: skills/release-helper
 ```
@@ -162,6 +182,11 @@ directory containing `SKILL.md`. Each `SKILL.md` needs YAML frontmatter whose
 skill directory name must also match the skill key. Keep supporting scripts,
 references, and assets inside that skill directory so Repertoire installs the
 complete package.
+
+Variant directories may have different directory names, but their frontmatter
+`name` must still match the logical catalog key. Managed artifact modes are
+`copy`, `markdown-section`, and `json-merge`; copied hook scripts may set
+`executable: true`. Source and destination paths must remain contained.
 
 ## Author and use file stubs
 
@@ -241,6 +266,7 @@ skills:
   github.com/example/company-skills/phillarmonkey-code:
     scope: project
     targets: [agents]
+    hooks: true
 ```
 
 Then run:
@@ -264,6 +290,8 @@ uninstall an existing skill; use `repertoire remove <skill>` explicitly.
 repertoire update zensical
 repertoire update company
 repertoire update
+repertoire update graphify --with-hooks
+repertoire update graphify --no-hooks
 repertoire install
 repertoire remove zensical
 ```

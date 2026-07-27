@@ -2,6 +2,14 @@
 
 A catalog of portable AI agent skills maintained by Phillarmonic.
 
+## Available skills
+
+| Skill | Description |
+| --- | --- |
+| `repertoire` | Install and manage portable AI agent skills with Repertoire. |
+| `zensical` | Create, configure, build, and troubleshoot Zensical sites. |
+| `zensical-glossary` | Create and maintain rich glossary pages for Zensical sites. |
+
 ## Repertoire
 
 The root `repertoire.yaml` makes this repository consumable by
@@ -29,8 +37,3 @@ repertoire add zensical --catalog phillarmonic
 
 Every listed path must be contained in this repository and contain an Agent
 Skills-compatible `SKILL.md`.
-
-## Available skills
-
-- `repertoire` — install and manage portable AI agent skills with Repertoire.
-- `zensical` — create, configure, build, and troubleshoot Zensical sites.

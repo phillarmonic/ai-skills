@@ -1,0 +1,4 @@
+interface:
+  display_name: "Zensical Glossary"
+  short_description: "Create and maintain rich Zensical glossaries"
+  default_prompt: "Use $zensical-glossary to create or update the glossary for this Zensical documentation site."

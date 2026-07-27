@@ -7,3 +7,5 @@ catalog:
       path: skills/repertoire
     zensical:
       path: skills/zensical
+    zensical-glossary:
+      path: skills/zensical-glossary

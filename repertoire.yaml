@@ -3,11 +3,145 @@ catalog:
   name: phillarmonic
   description: Portable AI agent skills maintained by Phillarmonic
   skills:
+    common-stubs:
+      path: skills/common-stubs
+    drun:
+      path: skills/drun
+      instructions:
+        agents:
+        - id: drun-guidance
+          source: skills/drun/pointers/agents.md
+          destination: AGENTS.md
+          mode: markdown-section
+        aider:
+        - id: drun-guidance
+          source: skills/drun/pointers/agents.md
+          destination: AGENTS.md
+          mode: markdown-section
+        amp:
+        - id: drun-guidance
+          source: skills/drun/pointers/agents.md
+          destination: AGENTS.md
+          mode: markdown-section
+        antigravity:
+        - id: antigravity-rule
+          source: skills/drun/pointers/antigravity-rule.md
+          destination: .agents/rules/drun.md
+          mode: copy
+        - id: antigravity-workflow
+          source: skills/drun/pointers/antigravity-workflow.md
+          destination: .agents/workflows/drun.md
+          mode: copy
+        antigravity-windows:
+        - id: antigravity-rule
+          source: skills/drun/pointers/antigravity-rule.md
+          destination: .agents/rules/drun.md
+          mode: copy
+        - id: antigravity-workflow
+          source: skills/drun/pointers/antigravity-workflow.md
+          destination: .agents/workflows/drun.md
+          mode: copy
+        claude:
+        - id: claude-guidance
+          source: skills/drun/pointers/claude.md
+          destination: CLAUDE.md
+          mode: markdown-section
+        - id: claude-registration
+          source: skills/drun/pointers/claude.md
+          destination: .claude/CLAUDE.md
+          mode: copy
+        claw:
+        - id: drun-guidance
+          source: skills/drun/pointers/agents.md
+          destination: AGENTS.md
+          mode: markdown-section
+        codebuddy:
+        - id: codebuddy-guidance
+          source: skills/drun/pointers/claude.md
+          destination: CODEBUDDY.md
+          mode: markdown-section
+        codex:
+        - id: drun-guidance
+          source: skills/drun/pointers/agents.md
+          destination: AGENTS.md
+          mode: markdown-section
+        copilot:
+        - id: copilot-guidance
+          source: skills/drun/pointers/vscode.md
+          destination: .github/copilot-instructions.md
+          mode: markdown-section
+        cursor:
+        - id: cursor-rule
+          source: skills/drun/pointers/cursor.mdc
+          destination: .cursor/rules/drun.mdc
+          mode: copy
+        devin:
+        - id: devin-rule
+          source: skills/drun/pointers/claude.md
+          destination: .windsurf/rules/drun.md
+          mode: copy
+        droid:
+        - id: drun-guidance
+          source: skills/drun/pointers/agents.md
+          destination: AGENTS.md
+          mode: markdown-section
+        gemini:
+        - id: gemini-guidance
+          source: skills/drun/pointers/gemini.md
+          destination: GEMINI.md
+          mode: markdown-section
+        hermes:
+        - id: drun-guidance
+          source: skills/drun/pointers/agents.md
+          destination: AGENTS.md
+          mode: markdown-section
+        kilo:
+        - id: drun-guidance
+          source: skills/drun/pointers/agents.md
+          destination: AGENTS.md
+          mode: markdown-section
+        kiro:
+        - id: kiro-steering
+          source: skills/drun/pointers/kiro.md
+          destination: .kiro/steering/drun.md
+          mode: copy
+        openclaw:
+        - id: drun-guidance
+          source: skills/drun/pointers/agents.md
+          destination: AGENTS.md
+          mode: markdown-section
+        opencode:
+        - id: drun-guidance
+          source: skills/drun/pointers/agents.md
+          destination: AGENTS.md
+          mode: markdown-section
+        trae:
+        - id: drun-guidance
+          source: skills/drun/pointers/agents.md
+          destination: AGENTS.md
+          mode: markdown-section
+        trae-cn:
+        - id: drun-guidance
+          source: skills/drun/pointers/agents.md
+          destination: AGENTS.md
+          mode: markdown-section
+        vscode:
+        - id: copilot-guidance
+          source: skills/drun/pointers/vscode.md
+          destination: .github/copilot-instructions.md
+          mode: markdown-section
+        windows:
+        - id: claude-guidance
+          source: skills/drun/pointers/claude.md
+          destination: CLAUDE.md
+          mode: markdown-section
+        - id: claude-registration
+          source: skills/drun/pointers/claude.md
+          destination: .claude/CLAUDE.md
+          mode: copy
     repertoire:
       path: skills/repertoire
     zensical:
       path: skills/zensical
     zensical-glossary:
       path: skills/zensical-glossary
-    common-stubs:
-      path: skills/common-stubs

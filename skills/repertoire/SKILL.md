@@ -80,6 +80,9 @@ Prefer namespaced IDs (`github.com/phillarmonic/ai-skills/zensical`) when a shor
 name could be ambiguous. For catalog skill keys that intentionally qualify a
 generic name, use owner/vendor segments such as `a-vendor-name/code`; installed
 copies use a safe flat directory name.
+This is especially useful for broad action skills such as `code`, `review`,
+`docs`, or `test`, where the owner-qualified key tells agents which behavior
+definition they should apply.
 
 Use `install <skill>` for a one-off tracked installation when the skill is not
 declared. With no skill name, `install` installs or repairs every declared
@@ -151,6 +154,9 @@ catalog:
 Catalog names must contain 1–64 lowercase letters, digits, or single hyphens.
 Skill keys use the same rule and may include `/` to qualify a generic skill with
 an owner or vendor segment (`code-reviewer` and `a-vendor-name/code` are valid).
+Use qualified keys for generic action-oriented skills such as `code`, `review`,
+`docs`, or `test`; bare names are harder for agents to distinguish when several
+personal or vendor catalogs are enabled.
 Every path must be relative, remain inside the repository, and point to a
 directory containing `SKILL.md`. Each `SKILL.md` needs YAML frontmatter whose
 `name` exactly matches its catalog key and whose `description` is non-empty. For

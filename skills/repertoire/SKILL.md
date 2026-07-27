@@ -29,10 +29,10 @@ roots. Use `--project` when a skill should live in the current Git worktree.
 `--global` makes the default explicit. Never combine `--project` and
 `--global`.
 
-Shell completion suggests registries Repertoire already knows (built-in, global
+Shell completion suggests catalogs Repertoire already knows (built-in, global
 and project registrations, bootstrap catalogs, lock sources, and cached
 remotes), including source URLs for `catalog add`. Prefer tab-completing those
-known registries instead of inventing catalog names.
+known catalogs instead of inventing catalog names.
 
 Use Repertoire commands instead of manually editing generated
 `repertoire.lock.json` files or managed skill copies.
@@ -45,6 +45,10 @@ List visible definitions:
 repertoire list --available
 repertoire list --available --catalog phillarmonic
 ```
+
+`list --available` refreshes visible catalog caches before reading manifests, so
+newly published tracking-branch skills should appear without a separate catalog
+update.
 
 The official `phillarmonic` catalog is built in and does not need registration.
 An unqualified skill name works when exactly one visible catalog defines it:
@@ -73,8 +77,9 @@ repertoire add zensical --target all
 ```
 
 Prefer namespaced IDs (`github.com/phillarmonic/ai-skills/zensical`) when a short
-name could be ambiguous. The on-disk install directory remains the short skill
-name (`zensical`).
+name could be ambiguous. For catalog skill keys that intentionally qualify a
+generic name, use owner/vendor segments such as `a-vendor-name/code`; installed
+copies use a safe flat directory name.
 
 Use `install <skill>` for a one-off tracked installation when the skill is not
 declared. With no skill name, `install` installs or repairs every declared
@@ -114,9 +119,9 @@ repertoire list
 repertoire catalog remove company
 ```
 
-## Author a private registry
+## Author a private catalog
 
-A private registry is an ordinary Git repository with a `repertoire.yaml` at
+A private catalog is an ordinary Git repository with a `repertoire.yaml` at
 its root. Keep each skill in its own directory and list that contained relative
 path in the catalog manifest:
 
@@ -143,12 +148,15 @@ catalog:
       path: skills/release-helper
 ```
 
-The catalog name and skill keys must contain 1–64 lowercase letters, digits, or
-single hyphens. Every path must be relative, remain inside the repository, and
-point to a directory containing `SKILL.md`. Each `SKILL.md` needs YAML
-frontmatter whose `name` exactly matches its catalog key and whose `description`
-is non-empty. Keep supporting scripts, references, and assets inside that skill
-directory so Repertoire installs the complete package.
+Catalog names must contain 1–64 lowercase letters, digits, or single hyphens.
+Skill keys use the same rule and may include `/` to qualify a generic skill with
+an owner or vendor segment (`code-reviewer` and `a-vendor-name/code` are valid).
+Every path must be relative, remain inside the repository, and point to a
+directory containing `SKILL.md`. Each `SKILL.md` needs YAML frontmatter whose
+`name` exactly matches its catalog key and whose `description` is non-empty. For
+qualified keys such as `a-vendor-name/code`, the skill directory name must match
+the final segment (`code`). Keep supporting scripts, references, and assets
+inside that skill directory so Repertoire installs the complete package.
 
 ## Author and use file stubs
 
@@ -204,7 +212,7 @@ repertoire list --available --catalog company
 Do not embed tokens, passwords, or other credentials in the catalog URL or any
 manifest. Repertoire delegates authentication to Git. Omit `--ref` to track the
 remote default branch; use a branch for updateable releases or a tag/full commit
-for an immutable registry snapshot.
+for an immutable catalog snapshot.
 
 ## Bootstrap a project
 
@@ -225,8 +233,7 @@ skills:
     scope: global
     targets: [codex]
 
-  shared-helpers:
-    catalog: company
+  github.com/example/company-skills/a-vendor-name/code:
     scope: project
     targets: [agents]
 ```
@@ -250,12 +257,15 @@ uninstall an existing skill; use `repertoire remove <skill>` explicitly.
 
 ```bash
 repertoire update zensical
+repertoire update company
 repertoire update
 repertoire install
 repertoire remove zensical
 ```
 
-`update` refreshes tracking catalogs and reinstalls selected managed skills.
+`update` refreshes tracking catalogs and reinstalls selected managed skills. If
+the argument names a visible catalog rather than an installed skill, it refreshes
+that catalog and stops.
 `install` without a name repairs declared requirements from current catalog
 state. `remove` only removes content that Repertoire can verify it manages.
 

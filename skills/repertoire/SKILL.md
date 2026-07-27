@@ -150,6 +150,35 @@ frontmatter whose `name` exactly matches its catalog key and whose `description`
 is non-empty. Keep supporting scripts, references, and assets inside that skill
 directory so Repertoire installs the complete package.
 
+## Author and use file stubs
+
+A skill may expose small file-backed stubs through an optional `stubs.yaml` in
+its root:
+
+```yaml
+schema: 1
+stubs:
+  editorconfig:
+    description: Ensure text files end with a newline.
+    path: assets/.editorconfig
+    instructions: |
+      Create or merge the repository-root .editorconfig while preserving
+      existing settings.
+```
+
+Each stub points to one contained regular file and includes non-empty
+description and instructions. Install the containing skill, then ask Repertoire
+for a verified local asset path:
+
+```bash
+repertoire stub list
+repertoire stub list common-stubs
+repertoire stub get common-stubs/editorconfig
+```
+
+Repertoire prints the path and instructions for the agent. It does not copy,
+merge, execute, or print the asset itself.
+
 Validate locally before publishing from a disposable Git worktree. Project
 scope keeps both the test registration and installed copy out of the user's
 global Repertoire state:

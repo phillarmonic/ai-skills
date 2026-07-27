@@ -9,3 +9,5 @@ catalog:
       path: skills/zensical
     zensical-glossary:
       path: skills/zensical-glossary
+    common-stubs:
+      path: skills/common-stubs

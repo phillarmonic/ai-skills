@@ -1,0 +1,9 @@
+schema: 1
+stubs:
+  editorconfig:
+    description: Ensure text files end with a newline.
+    path: assets/.editorconfig
+    instructions: |
+      Create or update the repository-root .editorconfig so that [*] sets
+      insert_final_newline = true. Preserve and merge any existing settings
+      instead of replacing the file wholesale.

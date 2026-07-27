@@ -9,6 +9,7 @@ A catalog of portable AI agent skills maintained by Phillarmonic.
 | `repertoire` | Install and manage portable AI agent skills with Repertoire. |
 | `zensical` | Create, configure, build, and troubleshoot Zensical sites. |
 | `zensical-glossary` | Create and maintain rich glossary pages for Zensical sites. |
+| `common-stubs` | Supply small, reusable starter files for common project conventions. |
 
 ## Repertoire
 

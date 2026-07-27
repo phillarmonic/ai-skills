@@ -7,3 +7,10 @@ stubs:
       Create or update the repository-root .editorconfig so that [*] sets
       insert_final_newline = true. Preserve and merge any existing settings
       instead of replacing the file wholesale.
+  os-gitignore:
+    description: Ignore operating system-generated files.
+    path: assets/.gitignore
+    instructions: |
+      Merge the patterns from the supplied asset into the repository-root
+      .gitignore. Preserve existing rules and comments, and avoid duplicate patterns.
+      If .gitignore does not exist, create it from the asset.

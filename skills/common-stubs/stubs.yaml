@@ -14,3 +14,10 @@ stubs:
       Merge the patterns from the supplied asset into the repository-root
       .gitignore. Preserve existing rules and comments, and avoid duplicate patterns.
       If .gitignore does not exist, create it from the asset.
+  go-gitignore:
+    description: Ignore operating go specific build artifacts
+    path: assets/.gitignore-go
+    instructions: |
+      Merge the patterns from the supplied asset into the repository-root
+      .gitignore. Preserve existing rules and comments, and avoid duplicate patterns.
+      If .gitignore does not exist, create it from the asset.

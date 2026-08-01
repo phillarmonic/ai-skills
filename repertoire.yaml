@@ -49,7 +49,7 @@ catalog:
         - id: claude-registration
           source: skills/drun/pointers/claude.md
           destination: .claude/CLAUDE.md
-          mode: copy
+          mode: markdown-section
         claw:
         - id: drun-guidance
           source: skills/drun/pointers/agents.md
@@ -138,7 +138,7 @@ catalog:
         - id: claude-registration
           source: skills/drun/pointers/claude.md
           destination: .claude/CLAUDE.md
-          mode: copy
+          mode: markdown-section
     repertoire:
       path: skills/repertoire
     zensical:

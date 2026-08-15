@@ -1,0 +1,28 @@
+schema: 1
+stubs:
+  cursor-mcp:
+    description: Configure OpenObserve MCP in Cursor.
+    path: assets/mcp-servers.json
+    instructions: |
+      Merge the openobserve entry from this asset into mcpServers in
+      ~/.cursor/mcp.json. Preserve every existing server and setting. Replace
+      the instance URL, organization, and token placeholders. Keep the real
+      authorization value out of version control and do not print it.
+  vscode-mcp:
+    description: Configure OpenObserve MCP in VS Code.
+    path: assets/vscode-mcp.json
+    instructions: |
+      Merge the openobserve entry from this asset into servers in the
+      workspace .vscode/mcp.json. Preserve every existing server and setting.
+      Replace the instance URL and organization placeholders. Do not put a real
+      authorization value in a tracked workspace file; use a client-supported
+      secret mechanism or obtain the user's explicit choice of secure storage.
+  claude-desktop-mcp:
+    description: Configure OpenObserve MCP in Claude Desktop.
+    path: assets/mcp-servers.json
+    instructions: |
+      Merge the openobserve entry from this asset into mcpServers in the
+      existing claude_desktop_config.json. On macOS, the file is normally under
+      ~/Library/Application Support/Claude/. Preserve every existing server and
+      setting. Replace the instance URL, organization, and token placeholders,
+      and never print or commit the real authorization value.

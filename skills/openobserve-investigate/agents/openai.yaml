@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenObserve Investigate"
+  short_description: "Investigate telemetry through OpenObserve MCP"
+  default_prompt: "Use $openobserve-investigate to investigate this incident through OpenObserve logs, metrics, and traces."

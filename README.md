@@ -11,6 +11,30 @@ A catalog of portable AI agent skills maintained by Phillarmonic.
 | `zensical-glossary` | Create and maintain rich glossary pages for Zensical sites.                                                       |
 | `common-stubs`      | Supply small, reusable starter files for common project conventions.                                              |
 | `drun`              | Use when working with drun specs or xdrun automation: tasks, parameters, platforms, interpolation, CI, and hooks. |
+| `openobserve-investigate` | Investigate logs, metrics, traces, incidents, and stream metadata through OpenObserve MCP or its HTTP API. |
+
+## OpenObserve investigation
+
+Install the skill with Repertoire:
+
+```shell
+repertoire add openobserve-investigate --catalog phillarmonic
+```
+
+The skill guides schema-first, read-only incident investigation through an
+OpenObserve MCP server. It also exposes verified MCP configuration templates
+for Cursor, VS Code, and Claude Desktop:
+
+```shell
+repertoire stub list openobserve-investigate
+repertoire stub get openobserve-investigate/cursor-mcp
+repertoire stub get openobserve-investigate/vscode-mcp
+repertoire stub get openobserve-investigate/claude-desktop-mcp
+```
+
+`stub get` returns the installed template path and client-specific merge
+instructions. Templates contain placeholders only; keep real authorization
+values out of version control.
 
 ## Repertoire
 

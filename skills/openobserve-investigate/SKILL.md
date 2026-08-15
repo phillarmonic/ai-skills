@@ -17,7 +17,25 @@ or when the task specifically requires protocol troubleshooting.
 ## Establish access
 
 Confirm that the host exposes an OpenObserve MCP server, identify its
-organization, and inspect `tools/list`. If no connection exists, read
+organization, and inspect `tools/list`. Do not guess: inspect the host's
+actual MCP configuration.
+
+- Claude Code: read `mcpServers` in `~/.claude.json` (user scope) and in the
+  project's `.mcp.json`. A server name appearing elsewhere in the file (for
+  example under usage statistics) is not a configured server.
+- Claude Desktop: `claude_desktop_config.json` (on macOS under
+  `~/Library/Application Support/Claude/`).
+- Cursor: `~/.cursor/mcp.json`. VS Code: workspace `.vscode/mcp.json`.
+
+MCP configuration loads at session start. If a server is configured but its
+tools are absent from the session, the session predates the configuration —
+ask the user to restart or start a new session rather than retrying.
+
+When several instances are reachable (for example a project instance and a
+shared one on different ports), enumerate them, pick deliberately, and name
+the instance in the report.
+
+If no connection exists, read
 [references/mcp-and-api.md](references/mcp-and-api.md) for the endpoint and
 client configuration. Let the MCP client own authentication; never print,
 commit, or paste credentials into reports.
@@ -29,9 +47,10 @@ verified template through Repertoire:
 
 ```bash
 repertoire stub list openobserve-investigate
+repertoire stub get openobserve-investigate/claude-code-mcp
+repertoire stub get openobserve-investigate/claude-desktop-mcp
 repertoire stub get openobserve-investigate/cursor-mcp
 repertoire stub get openobserve-investigate/vscode-mcp
-repertoire stub get openobserve-investigate/claude-desktop-mcp
 ```
 
 Follow the returned instructions and merge the asset into the existing client

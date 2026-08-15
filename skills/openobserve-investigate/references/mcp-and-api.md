@@ -58,6 +58,27 @@ connection is unavailable or its transport is under investigation. Supply
 credentials through the environment or the client's secret store instead of
 embedding them in commands or files.
 
+For compose-based local instances the credential typically lives in a project
+`.env` as `VAR="Basic <base64>"`. Never `source` a `.env` to load it: the
+space after `Basic` makes the shell execute the token as a command, and zsh
+history-expands `!` in passwords. Extract single values instead:
+
+```bash
+AUTH=$(grep '^OPENOBSERVE_AUTH=' .env | cut -d= -f2- | tr -d '"')
+```
+
+If the file holds email and password rather than a ready header, derive it:
+
+```bash
+AUTH="Basic $(printf '%s' "$EMAIL:$PASSWORD" | base64)"
+```
+
+Always surface HTTP errors: use `curl -sS -w '\nHTTP:%{http_code}\n'` and
+never `-f`, which discards the response body — error bodies carry the
+`hint`/`suggestions` fields and the distinction between 401 and a query
+error. Pipe JSON responses through a parser only after confirming a 2xx
+status.
+
 The core read-only endpoints are:
 
 - List streams: `GET /api/{org}/streams?type=logs&fetchSchema=false`
@@ -93,3 +114,22 @@ Most clients need an HTTP MCP entry with the endpoint and authorization header.
 Keep the token in environment-backed secret configuration. Register one server
 per organization when investigating multiple environments so org boundaries
 remain explicit.
+
+## Verify a configured endpoint
+
+After writing client configuration, prove the endpoint works before ending
+the task: call `initialize` and `tools/list` directly. The response may
+arrive as plain JSON or as SSE `data: <json>` events; handle both.
+
+```bash
+curl -sS -X POST -H "Authorization: $AUTH" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  "http://localhost:5080/api/default/mcp" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"verify","version":"0.1"}}}'
+```
+
+Repeat with `"method":"tools/list","params":{}` and expect `tool_search`,
+`tools_call`, and the pinned tools. A configured server only appears in a
+host's tool list after the host reloads its MCP configuration — for most
+clients that means a new session or restart.

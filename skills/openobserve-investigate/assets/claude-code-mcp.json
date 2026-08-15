@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "openobserve": {
+      "type": "http",
+      "url": "https://your-instance/api/your-organization/mcp",
+      "headers": {
+        "Authorization": "Basic <YOUR_BASE64_TOKEN>"
+      }
+    }
+  }
+}

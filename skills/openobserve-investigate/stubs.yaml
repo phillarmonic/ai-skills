@@ -1,5 +1,19 @@
 schema: 1
 stubs:
+  claude-code-mcp:
+    description: Configure OpenObserve MCP in Claude Code.
+    path: assets/claude-code-mcp.json
+    instructions: |
+      Merge the openobserve entry from this asset into mcpServers in
+      ~/.claude.json (user scope) or the project .mcp.json. Preserve every
+      existing server and setting; edit the JSON programmatically rather than
+      rewriting the file. Keep the "type": "http" field — Claude Code
+      requires it for URL-based servers. Replace the instance URL,
+      organization, and token placeholders, and never print or commit the
+      real authorization value. Claude Code loads MCP configuration at
+      session start, so tell the user a new session or restart is required
+      before the tools appear. Verify the endpoint first with the initialize
+      and tools/list recipe in references/mcp-and-api.md.
   cursor-mcp:
     description: Configure OpenObserve MCP in Cursor.
     path: assets/mcp-servers.json

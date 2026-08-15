@@ -66,7 +66,7 @@ does not change the API's epoch-microsecond bounds.
 - 404: verify `/api/{org}/mcp`, org spelling, base-path proxies, and server
   version.
 - 401/403: verify credentials, org membership, and RBAC without printing the
-  authorization value.
+  authorization value. See the credential drift checklist below.
 - Missing tool: call `tools/list`, then `tool_search`; do not assume every tool
   is pinned or available in every version.
 - Unknown stream/field: rerun `StreamList`/`StreamSchema` and apply any returned
@@ -75,6 +75,39 @@ does not change the API's epoch-microsecond bounds.
   before concluding that no event occurred.
 - Timeout/large scan: narrow bounds or predicates, select fewer fields, then use
   server-side partition mode.
+
+## Credential drift
+
+A credential that worked earlier in the session and now returns 401 is
+usually drift between the places the secret is stored, not a server fault.
+For compose-based local instances check, in order:
+
+1. File consistency: the ready-made header matches the derived one —
+   `OPENOBSERVE_AUTH` equals `base64(ROOT_USER_EMAIL:ROOT_USER_PASSWORD)`
+   from the same file. OpenObserve applies `ZO_ROOT_USER_*` at container
+   startup, so the derived pair is authoritative.
+2. Resolved configuration: `docker compose config` shows what containers
+   actually receive; compose prefers exported process environment over
+   `.env`, so a stale shell export shadows file edits.
+3. Running containers: they snapshot environment at create time. Compare
+   `docker inspect <container> --format '{{.Config.Env}}'` and recreate
+   (`docker compose up -d --force-recreate <service>`) after credential
+   changes. Prefer `docker inspect` over `docker exec ... printenv`; exec
+   output can carry noise that mimics a wrong value.
+
+Verify secrets without exposing them — printing, decoding, or diffing a live
+credential may be blocked by host permission classifiers and must never
+appear in a report. Compare equality instead:
+
+```bash
+EXPECTED=$(grep '^OPENOBSERVE_AUTH=' .env | cut -d= -f2- | tr -d '"')
+DERIVED="Basic $(printf '%s' "$EMAIL:$PASSWORD" | base64)"
+[ "$EXPECTED" = "$DERIVED" ] && echo MATCH || echo MISMATCH
+```
+
+SHA-256 fingerprint comparison (`shasum -a 256`) works the same way when
+the two values live in different shells or machines; value-length checks
+catch truncation. Report only MATCH/MISMATCH, never the compared material.
 
 ## Evidence report
 

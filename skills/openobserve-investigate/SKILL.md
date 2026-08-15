@@ -71,9 +71,17 @@ copy an asset into place without first reading the destination file.
 6. Report the time range, streams, queries, returned evidence, gaps, and the
    distinction between facts and hypotheses.
 
-Use `agent_options.output_format="csv"` for compact tabular search results. Use
+Use `agent_options.output_format="csv"` for compact tabular search results —
+but if a filtered query returns `total > 0` with empty `hits`, retry in JSON:
+CSV rendering silently drops hits on some filtered/ordered queries, and
+`total` is the match count, not proof rows arrived. Use
 `agent_options.mode="partition"` for wide-range top-N or aggregation queries;
 do not split a large range into a client-side loop.
+
+Do not trust `severity`/`level` fields at face value: they are usually
+assigned by the ingest pipeline (keyword-matching collector transforms), not
+the source application. Profile them before filtering — see
+[references/investigation-playbook.md](references/investigation-playbook.md).
 
 Read [references/investigation-playbook.md](references/investigation-playbook.md)
 for query patterns, correlation guidance, and failure handling.

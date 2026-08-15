@@ -73,8 +73,47 @@ does not change the API's epoch-microsecond bounds.
   query suggestions.
 - Empty result: verify signal type, timestamp units, ingest delay, and bounds
   before concluding that no event occurred.
+- Empty `hits` with `total > 0`: `total` is the server-side match count; the
+  rows were found but not delivered. Drop `agent_options.output_format="csv"`
+  and retry in JSON (CSV rendering silently drops hits on some filtered or
+  ordered queries), and check `from`/`size` pagination before concluding
+  anything.
+- Zero-looking stream stats: `StreamList`/`StreamSchema` statistics
+  (`doc_num`, `storage_size`) can report 0 on freshly created or stats-lagged
+  streams that actually hold data. Confirm emptiness with a small bounded
+  count query, never with the stats block.
 - Timeout/large scan: narrow bounds or predicates, select fewer fields, then use
   server-side partition mode.
+
+## Pipeline-derived fields
+
+`severity`, `level`, and similar classification fields are typically not
+emitted by the application — they are assigned downstream by the shipping
+pipeline (an OpenTelemetry Collector transform, Fluent Bit parser, or
+OpenObserve ingestion rule), often by keyword-matching the message text.
+Keyword matching false-positives in both directions: an INFO line quoting
+`span_status = 'ERROR'` or fetching `useErrorTracking.js` gets tagged ERROR,
+while a genuinely severe message without the keyword stays "unspecified".
+
+Before filtering or counting on such a field, profile it and spot-check:
+
+```sql
+SELECT severity, COUNT(*) AS n FROM "app_logs" GROUP BY severity ORDER BY n DESC
+```
+
+```sql
+SELECT _timestamp, severity, body FROM "app_logs"
+WHERE severity = 'ERROR'
+ORDER BY _timestamp DESC
+```
+
+If a sample of flagged rows does not actually carry that level in `body`, the
+field is keyword-derived: report the misclassification, and build the
+investigation on anchored body patterns instead — match the level token where
+the known log format places it (for example `... UTC [151] ERROR:` or
+`...T15:19:15Z\tERROR\t`), not a bare substring anywhere in the message.
+A uniform `severity = 0`/`unspecified` distribution is the same finding with
+the opposite sign: no classifier is running at all.
 
 ## Credential drift
 

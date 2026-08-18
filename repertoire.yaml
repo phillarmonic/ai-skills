@@ -139,6 +139,8 @@ catalog:
           source: skills/drun/pointers/claude.md
           destination: .claude/CLAUDE.md
           mode: markdown-section
+    graphify-docker:
+      path: skills/graphify-docker
     openobserve-investigate:
       path: skills/openobserve-investigate
     repertoire:

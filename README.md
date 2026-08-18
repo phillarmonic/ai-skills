@@ -11,6 +11,7 @@ A catalog of portable AI agent skills maintained by Phillarmonic.
 | `zensical-glossary`       | Create and maintain rich glossary pages for Zensical sites.                                                       |
 | `common-stubs`            | Supply small, reusable starter files for common project conventions.                                              |
 | `drun`                    | Use when working with drun specs or xdrun automation: tasks, parameters, platforms, interpolation, CI, and hooks. |
+| `graphify-docker`         | Run graphify and its MCP server through the phillarmonic/graphify-docker image.                                   |
 | `openobserve-investigate` | Investigate logs, metrics, traces, incidents, and stream metadata through OpenObserve MCP or its HTTP API.        |
 
 ## Repertoire
@@ -39,7 +40,6 @@ repertoire add zensical --catalog phillarmonic
 
 Every listed path must be contained in this repository and contain an Agent Skills-compatible `SKILL.md`.
 
-
 ## OpenObserve investigation
 
 Install the skill with Repertoire:
@@ -48,9 +48,8 @@ Install the skill with Repertoire:
 repertoire add openobserve-investigate --catalog phillarmonic
 ```
 
-The skill guides schema-first, read-only incident investigation through an
-OpenObserve MCP server. It also exposes verified MCP configuration templates
-for Cursor, VS Code, and Claude Desktop:
+The skill guides schema-first, read-only incident investigation through an OpenObserve MCP server. It also exposes
+verified MCP configuration templates for Cursor, VS Code, and Claude Desktop:
 
 ```shell
 repertoire stub list openobserve-investigate
@@ -59,6 +58,5 @@ repertoire stub get openobserve-investigate/vscode-mcp
 repertoire stub get openobserve-investigate/claude-desktop-mcp
 ```
 
-`stub get` returns the installed template path and client-specific merge
-instructions. Templates contain placeholders only; keep real authorization
-values out of version control.
+`stub get` returns the installed template path and client-specific merge instructions. Templates contain placeholders
+only; keep real authorization values out of version control.

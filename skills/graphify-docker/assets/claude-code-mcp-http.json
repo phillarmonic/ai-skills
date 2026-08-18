@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "graphify": {
+      "type": "http",
+      "url": "http://localhost:8080/mcp",
+      "headers": {
+        "Authorization": "Bearer <YOUR_GRAPHIFY_API_KEY>"
+      }
+    }
+  }
+}

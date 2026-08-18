@@ -1,0 +1,45 @@
+schema: 1
+stubs:
+  claude-code-mcp-http:
+    description: Configure the graphify MCP server (HTTP transport) in Claude Code.
+    path: assets/claude-code-mcp-http.json
+    instructions: |
+      Merge the graphify entry from this asset into mcpServers in
+      ~/.claude.json (user scope) or the project .mcp.json. Preserve every
+      existing server and setting; edit the JSON programmatically rather than
+      rewriting the file. Keep the "type": "http" field — Claude Code
+      requires it for URL-based servers. Replace the URL and the
+      Authorization placeholder with the bearer key the container was started
+      with (GRAPHIFY_API_KEY); never print or commit the real key. This
+      template assumes a running phillarmonic/graphify-docker container
+      serving http://localhost:8080/mcp — start it first if needed. Claude
+      Code loads MCP configuration at session start, so tell the user a new
+      session or restart is required before the tools appear.
+  mcp-http:
+    description: Configure the graphify MCP server (HTTP transport) in Claude Desktop, Cursor, or VS Code.
+    path: assets/mcp-http.json
+    instructions: |
+      Merge the graphify entry from this asset into the client's MCP
+      configuration: claude_desktop_config.json for Claude Desktop (on macOS
+      under ~/Library/Application Support/Claude/), ~/.cursor/mcp.json for
+      Cursor, or the workspace .vscode/mcp.json for VS Code (under the
+      "servers" key). Preserve every existing server and setting. Replace the
+      URL and the Authorization placeholder; never print or commit the real
+      API key, and do not put a real key in a tracked workspace file — use a
+      client-supported secret mechanism or obtain the user's explicit choice.
+      This template assumes a running phillarmonic/graphify-docker container
+      serving http://localhost:8080/mcp — start it first if needed.
+  mcp-stdio:
+    description: Configure graphify MCP in stdio mode (client spawns the container per session).
+    path: assets/mcp-stdio.json
+    instructions: |
+      Merge the graphify entry from this asset into the client's MCP
+      configuration (claude_desktop_config.json, ~/.cursor/mcp.json,
+      .vscode/mcp.json, or .mcp.json for Claude Code project scope). Preserve
+      every existing server and setting. Replace
+      /absolute/path/to/graphify-out with the real absolute path of the
+      project's graphify-out directory — the container requires an absolute
+      mount path. The -i flag is required so stdin stays attached; do not add
+      -p because nothing is served over the network in stdio mode. Docker must
+      be running whenever the MCP client starts. Tell the user a client
+      restart or new session is required before the tools appear.

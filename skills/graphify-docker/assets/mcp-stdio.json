@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "graphify": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-v",
+        "/absolute/path/to/graphify-out:/data",
+        "phillarmonic/graphify-docker",
+        "/data/graph.json",
+        "--transport",
+        "stdio"
+      ]
+    }
+  }
+}

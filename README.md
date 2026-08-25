@@ -12,6 +12,7 @@ A catalog of portable AI agent skills maintained by Phillarmonic.
 | `common-stubs`            | Supply small, reusable starter files for common project conventions.                                              |
 | `drun`                    | Use when working with drun specs or xdrun automation: tasks, parameters, platforms, interpolation, CI, and hooks. |
 | `graphify-docker`         | Run graphify and its MCP server through the phillarmonic/graphify-docker image.                                   |
+| `graphifyignore`          | Author and debug `.graphifyignore` files; scope a graphify corpus and manage LLM-free vs LLM phases.              |
 | `openobserve-investigate` | Investigate logs, metrics, traces, incidents, and stream metadata through OpenObserve MCP or its HTTP API.        |
 
 ## Repertoire

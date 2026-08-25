@@ -141,6 +141,8 @@ catalog:
           mode: markdown-section
     graphify-docker:
       path: skills/graphify-docker
+    graphifyignore:
+      path: skills/graphifyignore
     openobserve-investigate:
       path: skills/openobserve-investigate
     repertoire:

@@ -21,6 +21,14 @@ stubs:
       Merge the patterns from the supplied asset into the repository-root
       .gitignore. Preserve existing rules and comments, and avoid duplicate patterns.
       If .gitignore does not exist, create it from the asset.
+  gitattributes:
+    description: Pin LF line endings so Windows checkouts
+    path: assets/.gitattributes
+    instructions: |
+      Create the repository-root .gitattributes from the asset. It forces LF
+      checkouts on every OS (preventing CRLF lint failures on Windows)
+      while keeping .bat/.cmd/.ps1 as CRLF. If .gitattributes already exists,
+      merge instead of replacing, and run `git add --renormalize .` afterwards.
   python-gitignore:
     description: Ignore python specific artifacts
     path: assets/.gitignore-py

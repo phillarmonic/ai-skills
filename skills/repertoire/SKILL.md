@@ -102,11 +102,12 @@ directories. Use `--target all` only when copies should be created for every
 supported target even if its directory does not yet exist. Pass `--project` to
 install into the Git worktree instead of the home directory.
 
-Catalogs may provide managed hooks and project instructions. Interactive `add`
-prompts before installing them. Noninteractive commands skip them unless
-`--with-hooks` is present. Use `--no-hooks` to suppress or remove managed
-artifacts. Repertoire copies hook data but does not execute hooks during
-installation.
+Catalogs may provide always-on project instructions plus optional managed hooks
+and integrations. Repertoire installs `instructions:` artifacts unconditionally.
+For the optional `artifacts:` channel, interactive `add` prompts before
+installing, and noninteractive commands skip it unless `--with-hooks` is
+present. Use `--no-hooks` to suppress or remove the optional artifacts.
+Repertoire copies hook data but does not execute hooks during installation.
 
 ## Configure catalogs
 
@@ -157,12 +158,14 @@ catalog:
       path: skills/code-reviewer
       variants:
         codex: platforms/codex
-      artifacts:
+      instructions:
         codex:
           - id: guidance
             source: project-files/agents.md
             destination: AGENTS.md
             mode: markdown-section
+      artifacts:
+        codex:
           - id: hooks
             source: project-files/hooks.json
             destination: .codex/hooks.json
@@ -170,6 +173,18 @@ catalog:
     release-helper:
       path: skills/release-helper
 ```
+
+A skill entry exposes two per-target managed-file channels that share one
+schema and one artifact-`id` namespace:
+
+- `instructions:` are always-on project files. Repertoire installs them on every
+  `add`, `install`, `bootstrap`, or `update` regardless of the hooks flag. Use
+  this channel for guidance pointers such as an `AGENTS.md` `markdown-section`.
+- `artifacts:` are optional hooks and integrations. Repertoire installs them
+  only when the user opts in (interactive `add` prompt, or `--with-hooks` on a
+  noninteractive command), and `--no-hooks` suppresses or removes them. Use this
+  channel for hook scripts and configs such as a `.codex/hooks.json`
+  `json-merge`.
 
 Catalog names must contain 1–64 lowercase letters, digits, or single hyphens.
 Skill keys use the same kebab-case rule. Use owner-prefixed names such as
@@ -184,9 +199,10 @@ references, and assets inside that skill directory so Repertoire installs the
 complete package.
 
 Variant directories may have different directory names, but their frontmatter
-`name` must still match the logical catalog key. Managed artifact modes are
-`copy`, `markdown-section`, and `json-merge`; copied hook scripts may set
-`executable: true`. Source and destination paths must remain contained.
+`name` must still match the logical catalog key. Managed artifact modes for both
+the `instructions:` and `artifacts:` channels are `copy`, `markdown-section`,
+and `json-merge`; copied hook scripts may set `executable: true`. Source and
+destination paths must remain contained.
 
 ## Author and use file stubs
 

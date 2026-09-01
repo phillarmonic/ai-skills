@@ -46,3 +46,12 @@ stubs:
       Merge the patterns from the supplied asset into the repository-root
       .gitignore. Preserve existing rules and comments, and avoid duplicate patterns.
       If .gitignore does not exist, create it from the asset.
+  editorconfig-standard:
+    description: Standard EditorConfig for new projects (UTF-8, LF, 4-space indent, 120 columns).
+    path: assets/.editorconfig-standard
+    instructions: |
+      Create the repository-root .editorconfig from the asset when none exists.
+      It marks the repository as the root, pins UTF-8, LF line endings, 4-space
+      indentation with tab_width 4, a final newline, and a 120-column limit for
+      every file. If .editorconfig already exists, merge these settings instead
+      of replacing the file.

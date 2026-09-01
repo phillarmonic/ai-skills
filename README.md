@@ -32,12 +32,23 @@ repertoire add zensical --catalog phillarmonic
 If another visible catalog also defines `zensical`, Repertoire lists every matching definition and requires
 `--catalog phillarmonic` to select this one.
 
-For local development, override the built-in catalog with a checkout:
+For local development, override the built-in catalog with a checkout. Register
+a local path as `phillarmonic` (changes your global state), or — lighter — use
+an override that reads the checkout directly without touching any manifest:
 
 ```shell
 repertoire catalog add /path/to/ai-skills --name phillarmonic --force
 repertoire add zensical --catalog phillarmonic
+
+# or, without registering anything:
+REPERTOIRE_OVERRIDES="phillarmonic=/path/to/ai-skills" repertoire add zensical --target codex
+repertoire --override phillarmonic=/path/to/ai-skills add zensical --target codex
 ```
+
+`REPERTOIRE_OVERRIDES` accepts comma-separated `name=path` or `source=path`
+pairs; repeatable `--override name=path` flags win over environment values.
+`repertoire catalog list` marks overridden sources. Remove the override to
+return to the hosted catalog.
 
 Every listed path must be contained in this repository and contain an Agent Skills-compatible `SKILL.md`.
 

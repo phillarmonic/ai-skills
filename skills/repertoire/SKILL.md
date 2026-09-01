@@ -6,7 +6,8 @@ description: >-
   repertoire.yaml, repertoire.lock.json, .repertoire.yaml, skill catalogs,
   project or global skill installation, multi-agent targets, bootstrap or sync
   workflows, platform variants, managed hooks and project artifacts, catalog
-  ambiguity, or managed-skill safety errors.
+  ambiguity, managed-skill safety errors, or local catalog overrides for
+  testing skill repositories without pushing.
 ---
 
 # Repertoire
@@ -130,6 +131,36 @@ reference it:
 repertoire list
 repertoire catalog remove company
 ```
+
+## Test a catalog locally without pushing
+
+While developing a skill catalog, redirect any catalog to a local checkout so
+you can test changes before pushing them. Use the `REPERTOIRE_OVERRIDES`
+environment variable with comma-separated `name=path` or `source=path` pairs, or
+a repeatable `--override name=path` flag; flags win over environment values:
+
+```bash
+REPERTOIRE_OVERRIDES="phillarmonic=/path/to/ai-skills" repertoire add zensical --target codex
+repertoire --override company=/path/to/company-skills add code-reviewer --catalog company
+repertoire catalog list   # marks overridden sources
+```
+
+An override matches a catalog by its registered name or by its normalized
+source URL, so either spelling works. The local path is read directly instead
+of the remote, so `add`, `install`, `update`, `bootstrap`, `sync`, `list
+--available`, and shell completion all resolve from the local checkout. This
+also works for the built-in `phillarmonic` catalog — no `catalog add --force`
+registration is needed:
+
+```bash
+REPERTOIRE_OVERRIDES="phillarmonic=/path/to/ai-skills" repertoire list --available
+REPERTOIRE_OVERRIDES="phillarmonic=/path/to/ai-skills" repertoire bootstrap
+```
+
+The override path must be an existing directory; a missing path fails with a
+clear error, and a malformed `--override` pair (no `=`, empty name, or empty
+path) is rejected even by commands that do not materialize a catalog. Remove
+the override to return to the registered remote source.
 
 ## Author a private catalog
 
@@ -256,6 +287,11 @@ repertoire --project catalog add /absolute/path/to/company-skills --name company
 repertoire --project list --available --catalog company-dev
 repertoire --project install code-reviewer --catalog company-dev --target agents
 ```
+
+For an even lighter loop that never touches the manifest, use an override
+instead of registering a project catalog (see "Test a catalog locally without
+pushing"): the checkout is read directly, and no `catalogs:` entry or removal
+step is involved.
 
 Commit and push the repository to a private Git remote, grant users read access,
 then register the remote using SSH or credential-helper-backed HTTPS:

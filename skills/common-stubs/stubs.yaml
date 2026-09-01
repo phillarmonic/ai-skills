@@ -29,6 +29,16 @@ stubs:
       checkouts on every OS (preventing CRLF lint failures on Windows)
       while keeping .bat/.cmd/.ps1 as CRLF. If .gitattributes already exists,
       merge instead of replacing, and run `git add --renormalize .` afterwards.
+  changelog:
+    description: Track notable changes in Keep a Changelog format.
+    path: assets/CHANGELOG.md
+    instructions: |
+      Create the repository-root CHANGELOG.md from the asset when none exists.
+      It follows Keep a Changelog 1.1.0 with an [Unreleased] section and the
+      standard Added/Changed/Deprecated/Removed/Fixed/Security groups. Replace
+      OWNER/REPO in the link reference with the real repository path. If a
+      CHANGELOG.md already exists, leave it in place and record new entries
+      under [Unreleased] instead of overwriting the file.
   python-gitignore:
     description: Ignore python specific artifacts
     path: assets/.gitignore-py

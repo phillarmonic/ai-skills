@@ -230,8 +230,19 @@ repertoire stub list common-stubs
 repertoire stub get common-stubs/editorconfig
 ```
 
-Repertoire prints the path and instructions for the agent. It does not copy,
-merge, execute, or print the asset itself.
+Repertoire prints the path and instructions for the agent. By default it does
+not copy, merge, execute, or print the asset itself. When the stub instructions
+call for a wholesale file creation, add `--raw` to write only the asset bytes to
+stdout, which is safe to redirect:
+
+```bash
+repertoire stub get --raw common-stubs/gitattributes > .gitattributes
+```
+
+Never redirect the default (advisory) output into a file: it emits the
+`Stub`/`Description`/`Asset`/`Instructions` header, not the asset content. Use
+the advisory form only to locate the `Asset:` path when the instructions require
+merging into an existing file.
 
 Validate locally before publishing from a disposable Git worktree. Project
 scope keeps both the test registration and installed copy out of the user's

@@ -14,10 +14,13 @@ given $label as boolean defaults to false
 accepts $items as list                       # required list parameter
 ```
 
-`accepts $x as list` takes a **space-separated** value from the CLI
-(`xdrun task items="a b c"` iterates a, b, c) and has no default — calling
-without it leaves `$items` undefined. Note `as list of strings` parses but
-fails at runtime with `unknown data type` (verified); use plain `as list`.
+`accepts $x as list` takes a space- or comma-separated value from the CLI
+(`xdrun task items="a b c"` iterates a, b, c; `items="a, b, c"` iterates the
+same three items, trimmed) and has no default — calling without it leaves
+`$items` undefined. Element types are validated at runtime:
+`accepts $x as list of strings` (also `list of numbers`, `list of booleans`)
+rejects non-list values and checks every element against the element type,
+and unknown element types error clearly (verified).
 
 Available pattern macros: `semver` (strict, requires the `v` prefix),
 `semver_optional_v`, `semver_extended`, `uuid`, `url`, `ipv4`, `slug`,

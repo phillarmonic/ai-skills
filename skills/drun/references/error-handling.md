@@ -20,7 +20,8 @@ Verified semantics:
 
 - `try:` / `catch as $e:` / `finally:` work as expected; `$e` binds the error
   message. `finally` runs either way, and a failing `finally` overrides the
-  original error.
+  original error. Errors raised **inside a catch body** are no longer
+  swallowed — they propagate and fail the task.
 - `catch <Type> as $e:` narrows handling by error type
   (`catch FileNotFoundError as $e:`). Types match by message content, not a
   real type hierarchy — prefer catching all and branching on `{$e}` when in
@@ -33,12 +34,13 @@ Verified semantics:
     throw "config.yml missing — run xdrun setup first"
   ```
 
-- `rethrow` inside a catch keeps the task failing, but note it raises a
-  generic `rethrown error` — the original message is lost (engine
-  simplification). Log `{$e}` yourself before rethrowing.
-- `ignore` only makes sense **inside a catch block**: it suppresses the
-  handled error. A bare `ignore` elsewhere does not stop a failing `run` from
-  failing the task (verified).
+- `rethrow` inside a catch keeps the task failing with the **original caught
+  error** and its message (verified) — no need to log `{$e}` first.
+- `ignore` is only valid **inside a catch block**: it marks the caught error
+  as handled and continues. A bare `ignore` outside a catch is a clear error
+  (verified) — it cannot suppress a failing statement, because a command that
+  fails already aborts the task.
 
 Upstream examples: `examples/19-error-handling.drun`,
-`examples/13-simple-error-test.drun`, `examples/16-simple-throw.drun`.
+`examples/13-simple-error-test.drun`, `examples/16-simple-throw.drun`,
+`examples/17-just-ignore.drun`.

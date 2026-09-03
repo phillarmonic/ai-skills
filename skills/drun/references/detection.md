@@ -44,8 +44,9 @@ if $status is "usable":
 if env HOME exists:
 ```
 
-Trap: unquoted tool names with hyphens do not parse in these conditions —
-quote them (`"definitely-missing-tool"`).
+Tools whose names contain spaces must be quoted (`"docker compose"`). Any
+other name — including hyphenated ones like `my-fake-tool` — may be written
+bare or quoted in these conditions (verified).
 
 This complements `requires tools:` — use `requires tools` when a missing tool
 should fail the task, and `if <tool> is available` when the task should

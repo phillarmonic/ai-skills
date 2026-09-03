@@ -2,17 +2,44 @@
 
 Read this when writing loops, build/test matrices, or parallel fan-out.
 
-## Traps first (verified against the engine at HEAD)
+## Trap: string splitting in `for each`
 
-- `for $i in range 1 to 5`, `for each line text in file "f"`, and
-  `for each match m in pattern "..."` are **unimplemented stubs**: the engine
-  ignores the bounds/file/pattern and iterates hardcoded sample items
-  (a range loop literally runs 0–10). Do not use them until implemented.
-- `for each $x in $text` splits `$text` on **whitespace only**. A
-  space-separated string iterates word by word; a comma-separated string
-  iterates as ONE item. Prefer array literals or `as list` settings.
-  (Several upstream examples imply comma-splitting; they only "work" because
-  the filter happens to match the whole string.)
+`for each $x in $text` splits a **string** iterable as follows (verified
+against the engine at HEAD):
+
+- values containing **commas** iterate per comma-separated item (whitespace
+  around each item is trimmed) — `"a, b, c"` yields `a`, `b`, `c`;
+- values **without commas** split on whitespace — `"a b c"` yields `a`, `b`, `c`.
+
+Array literals and `as list` parameters/settings iterate their elements
+directly, which is usually clearer than embedding a list in a string:
+
+```drun
+for each $env in ["dev", "staging"]:
+  step "Deploying {$env}"
+```
+
+## Range, file-line, and pattern-match loops
+
+These loop forms are implemented (verified against the engine at HEAD):
+
+```drun
+# Real bounds and step (negative steps iterate downwards)
+for $i in range 1 to 9 step 2:
+  info "Item {$i}"
+
+# Reads the file line by line (dry runs report without reading)
+for each line text in file "logs/out.txt":
+  info "Line: {text}"
+
+# Regex matches over a subject variable/parameter (subject clause required)
+for each match result in pattern "[0-9]+" of $log:
+  info "Number: {result}"
+```
+
+A range `step 0`, a non-integer bound, a missing file, an invalid pattern, or
+an undefined subject each produce a clear error. Pattern-match loops require
+`of $subject` — the parser rejects a match loop without it.
 
 ## The reliable form
 
@@ -65,5 +92,4 @@ build/test/deploy matrices.
 
 Upstream examples: `examples/42-matrix-sequential.drun`,
 `examples/43-matrix-parallel.drun` (real), `examples/27-advanced-control-flow.drun`
-(filters and loop control are real; its range/line/pattern loops hit the stubs
-above).
+(comma-separated `$items` filters, range/line/match demos all run for real).

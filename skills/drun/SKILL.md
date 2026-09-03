@@ -278,11 +278,11 @@ traps to know before writing code:
   (`semver_optional_v`, `docker_tag`, ...), `defaults to empty` and boolean
   idioms, validation traps.
 - `references/builtins-and-transforms.md` — built-in function table, pipe
-  transforms, `let`/`set`/`transform`, and the two `capture` syntaxes (one of
-  them does not evaluate).
-- `references/control-flow.md` — `for each` loops, filters, matrices,
-  `in parallel`; range/line/pattern loops are unimplemented stubs — do not
-  use them.
+  transforms, `let`/`set`/`transform`, and the two `capture` syntaxes
+  (shell-capture vs. evaluated expression; `now` epoch seconds).
+- `references/control-flow.md` — `for each` loops (comma/whitespace string
+  splitting), filters, matrices, `in parallel`, and the real range/line/
+  pattern-match loop forms.
 - `references/lifecycle-hooks.md` — `on drun setup/teardown`,
   `before/after any task`; their failure semantics and the timer recipe.
 - `references/detection.md` — `if <tool> is available`, `detect project

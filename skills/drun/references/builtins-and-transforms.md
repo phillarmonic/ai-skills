@@ -56,11 +56,19 @@ Two syntaxes with **different** semantics (verified against the engine):
   info "commit: {$commit}"
   ```
 
-- `capture name from <expr>` — stores the expression **literally**, without
-  evaluating it. `capture t from now` stores the string `now`, so the
-  `capture ... from now` + `let d be {end} - {start}` timing idiom in
-  `examples/39-drun-lifecycle-hooks.drun` does not work. For timing, use the
-  timer built-ins (see `lifecycle-hooks.md`).
+- `capture name from <expr>` — interpolates/evaluates the expression like
+  `let`/`set` and stores the resolved text. In particular a bare `from now`
+  stores the `now` builtin's **Unix time in seconds**:
+
+  ```drun
+  capture start_time from now
+  info "started at {start_time}s"
+  ```
+
+  For human-readable timestamps use `{now.format('2006-01-02 15:04:05')}`
+  and for durations use the timer built-ins (`start timer`/`show elapsed
+  time`/`stop timer`, see `progress-timers.md` and `lifecycle-hooks.md`).
 
 Upstream examples: `examples/08-builtin-functions.drun`,
-`examples/28-variable-operations.drun`.
+`examples/28-variable-operations.drun`,
+`examples/39-drun-lifecycle-hooks.drun`.

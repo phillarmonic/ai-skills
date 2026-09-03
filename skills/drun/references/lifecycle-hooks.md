@@ -45,11 +45,13 @@ Execution order: `on drun setup` (once) → `before any task` → task body →
 Use the timer built-ins — they work across hook boundaries (verified), as in
 the example above.
 
-Do **not** copy the `capture t from now` + `let d be {end} - {start}` idiom
-from `examples/39-drun-lifecycle-hooks.drun`: `capture name from <expr>`
-stores the expression literally (it stores the string `now`), so the duration
-prints as `(now - now)`. See `builtins-and-transforms.md` for the two capture
-syntaxes.
+`capture name from now` does store a real Unix-time timestamp (the `now`
+builtin, in seconds), so capturing `start_time`/`end_time` around a hook works
+for recording when events happened — see
+`examples/39-drun-lifecycle-hooks.drun`. The engine has no arithmetic
+operator, though, so do not try `let d be {end} - {start}` to compute a
+duration; for human-readable durations use the timer built-ins. See
+`builtins-and-transforms.md` for the two capture syntaxes.
 
 ## Typical uses
 

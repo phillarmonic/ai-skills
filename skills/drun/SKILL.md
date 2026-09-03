@@ -397,8 +397,25 @@ Semantics that surprise people (verified against the engine):
   `after any task` and `on drun teardown` hooks are best-effort — their
   failures print a warning but don't fail the run.
 - Inside hooks, `$globals.current_task`, `$globals.project`,
-  `$globals.version`, and `$globals.drun_version` are available; the
-  `capture $t from now` + `let $d be {end} - {start}` idiom gives timing.
+  `$globals.version`, and `$globals.drun_version` are available.
+- For per-task timing, capture epoch seconds via the shell — the
+  `capture t from now` + `let d be {end} - {start}` idiom shown in
+  `examples/39-drun-lifecycle-hooks.drun` does **not** evaluate (`capture`
+  stores the literal string `now`; verified against the engine). Working
+  recipe:
+
+  ```drun
+  before any task:
+    capture from shell "date +%s" as $task_start
+
+  after any task:
+    capture from shell "echo $(( $(date +%s) - {$task_start} ))" as $duration
+    info "Task {$globals.current_task} took {$duration}s"
+  ```
+
+  Note the two capture syntaxes differ: `capture name from <expr>` stores the
+  expression literally, while `capture from shell "cmd" as $name` runs the
+  command and stores its (interpolated, trimmed) stdout.
 
 Typical uses: provisioning `.env` from `.env.example` in `on drun setup`,
 per-run timing/logging in the task-level hooks, pipeline metrics in

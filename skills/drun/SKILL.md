@@ -143,7 +143,8 @@ Useful examples in the upstream repo:
   `{$debug ? '--debug' : ''}` or
   `{if $environment is 'production' then 'prod.yml' else 'dev.yml'}`.
 - Secrets can be read with `secret(...)`, for example `{secret('api_key')}` or
-  `{secret('webhook_url', 'https://default.example')}`.
+  `{secret('webhook_url', 'https://default.example')}`; for managing secrets
+  from tasks see `references/secrets.md`.
 - Undefined drun variables are strict by default. Prefer
   `requires $name` or `given $name defaults to ...`.
 - If an expression is hard to scan inline, compute it with
@@ -295,3 +296,11 @@ traps to know before writing code:
 - `references/progress-timers.md` — progress indicators and named timers.
 - `references/git-policy.md` — `git policy:` blocks and drun-managed git
   hooks (`xdrun cmd:hook install`).
+- `references/code-reuse.md` — includes (local, `github:`, HTTPS, drunhub),
+  namespaces, `use snippet`, project-level `parameter`, `$params.*`.
+- `references/secrets.md` — `secret(...)` interpolation, `secret
+  set/exists/list/delete`, namespaces.
+- `references/error-handling.md` — `try`/`catch as $e`/`finally`, `throw`,
+  typed catches, `rethrow`, and where `ignore` actually works.
+- `references/orchestration.md` — `service` blocks with health checks,
+  compose, repository cloning, and the generated start/stop/health tasks.

@@ -11,7 +11,13 @@ requires $port as number between 1000 and 9999
 requires $environment from ["dev", "staging", "production"]
 requires $email matching email format
 given $label as boolean defaults to false
+accepts $items as list                       # required list parameter
 ```
+
+`accepts $x as list` takes a **space-separated** value from the CLI
+(`xdrun task items="a b c"` iterates a, b, c) and has no default — calling
+without it leaves `$items` undefined. Note `as list of strings` parses but
+fails at runtime with `unknown data type` (verified); use plain `as list`.
 
 Available pattern macros: `semver` (strict, requires the `v` prefix),
 `semver_optional_v`, `semver_extended`, `uuid`, `url`, `ipv4`, `slug`,

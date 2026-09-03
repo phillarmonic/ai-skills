@@ -8,10 +8,11 @@ Read this when writing loops, build/test matrices, or parallel fan-out.
   `for each match m in pattern "..."` are **unimplemented stubs**: the engine
   ignores the bounds/file/pattern and iterates hardcoded sample items
   (a range loop literally runs 0–10). Do not use them until implemented.
-- `for each $x in $csv` where `$csv` is a comma-separated **string** iterates
-  it as ONE item — comma strings are not auto-split. Always use array
-  literals or `as list` settings. (Several upstream examples imply otherwise;
-  they only "work" because the filter happens to match the whole string.)
+- `for each $x in $text` splits `$text` on **whitespace only**. A
+  space-separated string iterates word by word; a comma-separated string
+  iterates as ONE item. Prefer array literals or `as list` settings.
+  (Several upstream examples imply comma-splitting; they only "work" because
+  the filter happens to match the whole string.)
 
 ## The reliable form
 
@@ -43,6 +44,20 @@ task "matrix":
 
 Filter operators include `contains`, `starts with`, `ends with`, `==`, `!=`.
 Interpolate loop variables with `{$item}`.
+
+## when / otherwise
+
+`when <condition>:` is the multi-branch sibling of `if`, with `otherwise:` as
+the fallthrough:
+
+```drun
+when $environment is "production":
+  warn "production deploy"
+when $environment is not "dev":
+  info "review carefully"
+otherwise:
+  info "safe environment"
+```
 
 The matrix pattern — nested `for each` over array literals, with the outer
 loop `in parallel` and inner loops sequential — is the house way to do

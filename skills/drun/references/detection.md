@@ -24,9 +24,36 @@ when in local environment:
 `when in <name> environment:` knows `ci`, `local`, `production`, and
 `staging`.
 
+More verified forms:
+
+```drun
+# several tools at once (comma-separated, quoted when multi-word)
+if git,go are available:
+if docker,"docker compose" is not available:
+
+# pick the first available spelling and remember it (DRY fallback)
+detect available "docker compose" or "docker-compose" as $compose_cmd
+run "{$compose_cmd} version"
+
+# docker compose project state: usable / down / unusable / partial /
+# unavailable / error
+set $status to "{docker compose status}"
+if $status is "usable":
+
+# environment variable existence
+if env HOME exists:
+```
+
+Trap: unquoted tool names with hyphens do not parse in these conditions —
+quote them (`"definitely-missing-tool"`).
+
 This complements `requires tools:` — use `requires tools` when a missing tool
 should fail the task, and `if <tool> is available` when the task should
 adapt. For automatic installation of missing tools, see
 `tool-provisioning.md`.
 
-Upstream example: `examples/26-smart-detection.drun`.
+Upstream examples: `examples/26-smart-detection.drun`,
+`examples/31-docker-tools-detection.drun`, `examples/32-dry-tool-detection.drun`,
+`examples/40-docker-compose-status-check.drun`,
+`examples/48-multi-tool-detection.drun`,
+`examples/50-environment-variables.drun`.

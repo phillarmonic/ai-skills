@@ -3,7 +3,8 @@ name: drun
 description: >-
   Use when working with drun specs or xdrun automation: tasks, parameters,
   call task argument passing, platforms, interpolation, built-in functions,
-  semantic actions, tool provisioning, CI, and hooks.
+  control flow and loops, environment detection, semantic actions, tool
+  provisioning, lifecycle hooks, CI, and hooks.
 ---
 
 # drun
@@ -148,7 +149,17 @@ Useful examples in the upstream repo:
 - If an expression is hard to scan inline, compute it with
   `set $name to "..."` first.
 - Multi-line `run "..."` strings support interpolation and are often cleaner
-  than one huge shell line.
+  than one huge shell line. For multi-command scripts there is also a block
+  form, plus a capture variant that stores stdout in a variable:
+
+  ```drun
+  run:
+    echo "first command"
+    echo "second command"
+
+  capture from shell "git rev-parse --short HEAD" as $commit
+  info "commit: {$commit}"
+  ```
 
 Useful examples in the upstream repo:
 
@@ -157,6 +168,7 @@ Useful examples in the upstream repo:
 - `examples/52-conditional-interpolation.drun`
 - `examples/62-secrets-interpolation.drun`
 - `examples/63-multiline-strings.drun`
+- `examples/29-multiline-shell-commands.drun`
 
 ## Tool checks
 
@@ -179,148 +191,8 @@ task "test" means "Run the test suite":
   run "go test ./..."
 ```
 
-### Automatic tool provisioning
-
-Add `provision` to have drun install a missing tool instead of failing.
-This is the house pattern for lint/security tooling:
-
-```drun
-project "example" version "1.0":
-  requires tools:
-    golangci-lint provision
-    gosec provision
-    govulncheck provision
-
-task "lint":
-  requires tools:
-    golangci-lint >= "1.64" provision     # version ranges work
-  run "golangci-lint run ./..."
-```
-
-- Closed ranges (`>= "2.22" <= "2.22" provision`) pin the installed version;
-  changing an installed tool's version needs `--allow-tool-version-changes`.
-- A project may declare `provisioning sources:` with local YAML or
-  `github:org/repo/path@ref` catalogs; project sources override the embedded
-  first-party catalog.
-- A task can inherit tool requirements from the tasks it orchestrates:
-
-  ```drun
-  task "ci" mode "ci" means "Run quiet CI checks":
-    requires tools:
-      from tasks:
-        lint
-        security
-    call task lint
-    call task security
-  ```
-
-Upstream example: `examples/73-tool-provisioning.drun`.
-
-## Parameters in practice
-
-Typed parameters with constraints catch bad input before any command runs:
-
-```drun
-requires $version as string matching semver_optional_v
-requires $port as number between 1000 and 9999
-requires $environment from ["dev", "staging", "production"]
-requires $email matching email format
-given $label as boolean defaults to false
-```
-
-Available pattern macros: `semver` (strict, requires the `v` prefix),
-`semver_optional_v`, `semver_extended`, `uuid`, `url`, `ipv4`, `slug`,
-`docker_tag`, `git_branch`. Prefer macros over hand-written `matching pattern`
-regexes when one fits.
-
-Common idioms:
-
-- Optional value: `given $path defaults to empty` (equivalent to `""`), then
-  branch with `if $path is empty:` / `if $path is not empty:`.
-- Boolean switch: `given $volumes as boolean defaults to false`, then
-  `if $volumes is true:` or inline
-  `run "docker compose down {$volumes ? '--volumes' : ''}"`.
-- Parameter defaults can call built-in functions, including pipes:
-  `given $tag defaults to "{current git branch | replace '/' by '-' | lowercase}"`.
-
-Upstream examples: `examples/11-typed-parameters.drun`,
-`examples/35-advanced-parameter-validation.drun`.
-
-## Built-in functions and pipe transforms
-
-Interpolation `{...}` supports built-ins, chainable with `|`:
-
-| Expression | Yields |
-| --- | --- |
-| `{current git commit}` | short commit hash (`a72091f`) |
-| `{current git branch}` | branch name (`feature/new-api`) |
-| `{now.format('2006-01-02-15-04-05')}` | formatted time (Go layout) |
-| `{pwd}`, `{hostname}` | working directory, host |
-| `{os}`, `{shell}` | `windows`/`linux`/`darwin`; `bash`/`pwsh`/... |
-| `{env('VAR')}` | environment variable |
-| `{available tasks(', ')}` | OS-available task names, joined; extra args omit names |
-
-Pipe transforms: `replace "from" by "to"`, `without prefix "text"`,
-`without suffix "text"`, `uppercase`, `lowercase`, `trim`,
-`normalized for shell` (path separators/escapes for the active shell).
-
-```drun
-set $release_version to "{$version without prefix 'v'}"
-set $docker_tag to {current git branch | replace "/" by "-" | lowercase}
-run "go build -o {$path normalized for shell} ./cmd/app"
-```
-
-Note: `{os}` reports `darwin`, while `@platform(...)` prefers `mac` in new
-specs — the two vocabularies differ on purpose.
-
-Upstream example: `examples/08-builtin-functions.drun`.
-
-## Semantic actions worth knowing
-
-Drun has structured statements that beat shelling out; the ones used most
-across our repos:
-
-```drun
-# Files and folders
-copy "env.example" to ".env"
-create folder "caddy_data"
-if file ".env" not exists:
-if folder "build" is empty:
-if file "./a.json" not matches file "./b.json":
-
-# Structured file values (property, json, yaml, regex match)
-get property "pluginVersion" from "gradle.properties" as $plugin_version
-update property "pluginVersion" in "gradle.properties" to "{$version}" or fail
-update match "(?m)^VERSION=(?P<value>[^\r\n]+)$" in "VERSION.txt" to "{$version}" or fail
-
-# Project and changelog bookkeeping
-check project version equals "{$plugin_version}"
-update project version to "{$version}"
-promote changelog "CHANGELOG.md" to version "{$version}"
-
-# Git/SCM: declare an alias in the project block, then reference it
-#   scm:
-#     git:
-#       github:
-#         my-repo:
-#           default: https
-#           https: "https://github.com/org/repo.git"
-#           ssh: "git@github.com:org/repo.git"
-git ensure $version is newer than latest version from my-repo
-```
-
-Shell-related modifiers:
-
-- `run "! go list -deps ./cmd/app | rg '^bad/import/'"` — because `run`
-  executes through the shell, a leading `!` is POSIX negation: the step passes
-  when the command fails. Handy for boundary and absence checks.
-- `use workdir "docs"` scopes a task to a subdirectory instead of `cd`.
-- `run "pnpm run test:watch" attached` gives the command the terminal (stdin,
-  TTY) — use for watchers, shells, and anything interactive; only with
-  single-line `run`.
-
-Upstream examples: `examples/12-simple-file-ops.drun`,
-`examples/74-file-values.drun`, `examples/75-changelog-promotion.drun`.
+To have drun auto-install missing tools instead of failing, add `provision` —
+see `references/tool-provisioning.md`.
 
 ## House conventions
 
@@ -359,70 +231,6 @@ Patterns that repeat across Phillarmonic specs — follow them in our repos:
   success.
 - Keep shell commands explicit inside `run "..."`.
 
-## Lifecycle hooks
-
-Hooks are declared inside the `project` block — not per task:
-
-```drun
-project "myapp" version "1.0":
-  on drun setup:
-    info "Starting pipeline for {$globals.project} v{$globals.version}"
-    if file ".env" not exists:
-      copy ".env.example" to ".env"
-
-  before any task:
-    info "Starting task: {$globals.current_task}"
-    capture task_start_time from now
-
-  after any task:
-    capture task_end_time from now
-    info "Task '{$globals.current_task}' finished"
-
-  on drun teardown:
-    info "Pipeline completed"
-```
-
-Execution order: `on drun setup` (once) → `before any task` → task body →
-`after any task` → `on drun teardown` (once).
-
-Semantics that surprise people (verified against the engine):
-
-- `before any task` / `after any task` wrap **only the invoked target task**.
-  Dependency tasks and `call task` callees do **not** trigger them, despite
-  the "any task" name.
-- `after any task` and `on drun teardown` are **skipped when the task fails**
-  — teardown is not a `finally`. Put critical cleanup inside the task itself
-  (or use `try/catch/finally`) if it must run on failure.
-- A failing `on drun setup` or `before any task` hook aborts the run;
-  `after any task` and `on drun teardown` hooks are best-effort — their
-  failures print a warning but don't fail the run.
-- Inside hooks, `$globals.current_task`, `$globals.project`,
-  `$globals.version`, and `$globals.drun_version` are available.
-- For per-task timing, capture epoch seconds via the shell — the
-  `capture t from now` + `let d be {end} - {start}` idiom shown in
-  `examples/39-drun-lifecycle-hooks.drun` does **not** evaluate (`capture`
-  stores the literal string `now`; verified against the engine). Working
-  recipe:
-
-  ```drun
-  before any task:
-    capture from shell "date +%s" as $task_start
-
-  after any task:
-    capture from shell "echo $(( $(date +%s) - {$task_start} ))" as $duration
-    info "Task {$globals.current_task} took {$duration}s"
-  ```
-
-  Note the two capture syntaxes differ: `capture name from <expr>` stores the
-  expression literally, while `capture from shell "cmd" as $name` runs the
-  command and stores its (interpolated, trimmed) stdout.
-
-Typical uses: provisioning `.env` from `.env.example` in `on drun setup`,
-per-run timing/logging in the task-level hooks, pipeline metrics in
-`on drun teardown`.
-
-Upstream example: `examples/39-drun-lifecycle-hooks.drun`.
-
 ## Lifecycle basics
 
 - Bootstrap with `xdrun --init`.
@@ -460,22 +268,30 @@ task "ci" mode "ci" means "Run noisy checks with buffered output":
   run "go test ./..."
 ```
 
-## Git policy and hooks
+## Deep references
 
-Projects can define git conventions with a `git policy:` block. When present,
-use `xdrun cmd:hook install` to install drun-managed hooks that enforce them.
-The Repertoire catalog does not install these hooks.
+Load these only when the task touches their topic — each file starts with the
+traps to know before writing code:
 
-```drun
-project "example" version "1.0":
-  git policy:
-    branch:
-      default branches: "master", "main"
-      protected branches: "master", "main"
-      naming: "{type}/{identifier}-{description}"
-      types: "feat", "fix", "chore"
-    commit:
-      messages: "{identifier}: {message}"
-      extract identifier from branch
-      enforce signed commits
-```
+- `references/parameters.md` — typed parameters, pattern macros
+  (`semver_optional_v`, `docker_tag`, ...), `defaults to empty` and boolean
+  idioms, validation traps.
+- `references/builtins-and-transforms.md` — built-in function table, pipe
+  transforms, `let`/`set`/`transform`, and the two `capture` syntaxes (one of
+  them does not evaluate).
+- `references/control-flow.md` — `for each` loops, filters, matrices,
+  `in parallel`; range/line/pattern loops are unimplemented stubs — do not
+  use them.
+- `references/lifecycle-hooks.md` — `on drun setup/teardown`,
+  `before/after any task`; their failure semantics and the timer recipe.
+- `references/detection.md` — `if <tool> is available`, `detect project
+  type`, `when in ci/local/production/staging environment`.
+- `references/network-actions.md` — `ping`, `test connection`,
+  `wait for service ... to be ready`, HTTP verbs.
+- `references/semantic-actions.md` — file/property/changelog/project-version
+  statements, SCM aliases, `use workdir`, `attached`, `!` negation.
+- `references/tool-provisioning.md` — `provision`, version ranges,
+  provisioning catalogs, `from tasks:` inheritance.
+- `references/progress-timers.md` — progress indicators and named timers.
+- `references/git-policy.md` — `git policy:` blocks and drun-managed git
+  hooks (`xdrun cmd:hook install`).

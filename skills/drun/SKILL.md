@@ -171,6 +171,19 @@ Useful examples in the upstream repo:
 - `examples/63-multiline-strings.drun`
 - `examples/29-multiline-shell-commands.drun`
 
+## Running commands and interactivity
+
+`run "..."` executes detached from the terminal by default — no stdin, no TTY.
+If the command expects any interaction (prompts, confirmations, REPLs,
+watchers, shells, pagers), it must run in attached mode:
+
+```drun
+run "a shell command that will require interacting with" attached
+```
+
+Without `attached`, an interactive command will hang or fail waiting for input
+that can never arrive. Attached mode works only with single-line `run`.
+
 ## Tool checks
 
 Prefer declarative requirements when a task depends on a binary or minimum

@@ -47,19 +47,6 @@ Drun is a fluent automation DSL. The interpreter binary is `xdrun`
    stdout/stderr stays buffered and only failure output is emitted.
 10. After editing a spec, run the narrowest relevant `xdrun` command to verify.
 
-## Project AI guidance
-
-Repositories can install a managed cross-agent guide with:
-
-```bash
-xdrun cmd:skill install drun-basics
-```
-
-That writes `.drun/ai/drun-basics.md` plus light entrypoints in common agent
-files. Prefer that for explicit per-repository onboarding. A Repertoire project
-bootstrap can install this complete portable skill globally while managing only
-compact activation pointers in the repository.
-
 ## Calling tasks and passing arguments
 
 Use `call task` to compose tasks instead of duplicating steps:

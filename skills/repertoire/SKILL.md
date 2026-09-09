@@ -79,6 +79,16 @@ repertoire add zensical --target all
 repertoire --project add graphify --target codex --with-hooks
 ```
 
+`add` accepts several skills at once: comma-separated names, multiple
+arguments, or quoted glob patterns matched against the skills offered by the
+visible catalogs. A pattern that matches nothing is an error. Always quote
+globs — unquoted, zsh aborts with `no matches found` before Repertoire runs:
+
+```bash
+repertoire add zensical,zensical-glossary --target all
+repertoire add "product-*" --target all
+```
+
 Prefer source-qualified IDs (`github.com/phillarmonic/ai-skills/zensical`) when
 a short name could be ambiguous. For catalog skill keys that intentionally
 qualify a generic name, use owner-prefixed kebab-case names such as

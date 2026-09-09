@@ -3,8 +3,8 @@ name: drun
 description: >-
   Use when working with drun specs or xdrun automation: tasks, parameters,
   call task argument passing, platforms, interpolation, built-in functions,
-  control flow and loops, environment detection, semantic actions, tool
-  provisioning, lifecycle hooks, CI, and hooks.
+  control flow and loops, environment detection, interactive confirm/prompt
+  input, semantic actions, tool provisioning, lifecycle hooks, CI, and hooks.
 ---
 
 # drun
@@ -171,6 +171,49 @@ run "a shell command that will require interacting with" attached
 Without `attached`, an interactive command will hang or fail waiting for input
 that can never arrive. Attached mode works only with single-line `run`.
 
+## Interactive prompts and confirmations
+
+Native statements for asking the person running a task — no shell and no
+`attached` mode needed:
+
+```drun
+confirm "Deploy to production?"                    # gate: a "no" stops the run (exit 0)
+confirm "Run database migrations?" as $migrate     # stores "true" / "false"
+confirm "Delete build cache?" defaults to "no"     # empty answer or no TTY -> "no"
+confirm "Continue?" defaults to "yes" as $go
+prompt "Which environment?" as $environment
+prompt "Release notes?" defaults to "n/a" as $notes
+```
+
+Rules:
+
+- Both statements need the quoted question first; the optional clauses come in
+  order `defaults to <value>`, then `as $var`. Questions and defaults
+  interpolate `{$var}` like any other string.
+- `confirm` without `as $var` is a **gate**: answering no ends the run
+  gracefully with exit code 0 and later statements don't execute. With
+  `as $var` the answer is stored using drun's string-boolean convention —
+  `"true"` or `"false"` — and never aborts, so branch on it with
+  `if $migrate is "true":`.
+- `prompt` stores the raw typed answer and requires `as $var`.
+- A `confirm` declared default must be a yes/no answer (quoted or bare);
+  `prompt` defaults are free text.
+- On a real terminal drun renders `❓ <question> [y/N]` (`[Y/n]` when the
+  default is yes) and accepts y/yes/n/no case-insensitively; an empty line
+  takes the declared default.
+- Off a terminal — CI, no TTY, piped stdin, agents — drun **never blocks**: it
+  resolves the declared default, then the global `--yes`/`-y`/`--no`
+  assumption, and otherwise fails with a clear error telling you to add
+  `defaults to` or pass a flag. (Interactive shell programs still need
+  `run "..." attached`; these statements handle the fallback themselves.)
+- `--yes`/`-y`/`--no` answer every statement without prompting, even on a TTY.
+  `--dry-run` prints `[DRY RUN] would ask: "<question>"` and resolves
+  deterministically without asking.
+
+Compose them with `if`/`when`, loops, and `call task` like any statement. See
+`references/interactive-input.md` for the full resolution order and traps.
+Example: `examples/77-confirmations.drun`.
+
 ## Tool checks
 
 Prefer declarative requirements when a task depends on a binary or minimum
@@ -304,3 +347,6 @@ traps to know before writing code:
   typed catches, `rethrow`, and where `ignore` actually works.
 - `references/orchestration.md` — `service` blocks with health checks,
   compose, repository cloning, and the generated start/stop/health tasks.
+- `references/interactive-input.md` — `confirm` gates and `prompt` input:
+  surface forms, non-interactive/CI resolution, `--yes`/`--no` and dry-run
+  behavior, and traps (gate vs. `as $var`, `try`/`catch` interaction).

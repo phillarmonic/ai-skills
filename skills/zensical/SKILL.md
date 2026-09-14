@@ -39,6 +39,12 @@ Zensical is published on PyPI as `zensical` and requires Python >= 3.10. The CLI
 entry point is `zensical` (mapped to `zensical.main:cli`).
 
 ```bash
+# Preferred: when UV is available, create a local project environment and run via uv
+uv init
+uv add --dev zensical
+uv run zensical new
+uv run zensical build
+
 # Preferred: run without installing globally
 uvx zensical --help
 pipx run zensical --help
@@ -52,6 +58,12 @@ If `zensical` is not on `PATH` but the package is installed, use
 `python -m zensical`. When working inside this repository (a maturin project),
 build the native extension first with `uv sync` then `uv run maturin develop`,
 and invoke via `uv run zensical ...`.
+
+When creating a new Zensical project, prefer `uv` if it is available on the
+machine. Use a local project workflow such as:
+`uv init && uv add --dev zensical && uv run zensical new && uv run zensical build`.
+If `uv` is unavailable, fall back to `pipx` or `pip` instead of installing a
+persistent global CLI.
 
 Always confirm the tool is available before giving build/serve instructions:
 `zensical --version`. Do not assume a global install.

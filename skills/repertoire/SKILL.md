@@ -6,8 +6,9 @@ description: >-
   repertoire.yaml, repertoire.lock.json, .repertoire.yaml, skill catalogs,
   project or global skill installation, multi-agent targets, bootstrap or sync
   workflows, platform variants, managed hooks and project artifacts, catalog
-  ambiguity, managed-skill safety errors, or local catalog overrides for
-  testing skill repositories without pushing.
+  ambiguity, managed-skill safety errors, local catalog overrides for
+  testing skill repositories without pushing, or authoring an efficient
+  SKILL.md package with references, assets, and scripts.
 ---
 
 # Repertoire
@@ -172,6 +173,15 @@ clear error, and a malformed `--override` pair (no `=`, empty name, or empty
 path) is rejected even by commands that do not materialize a catalog. Remove
 the override to return to the registered remote source.
 
+An override only redirects where a catalog is *read* from; it does not change
+what a command *writes*. Read-only commands like `list --available` leave no
+state to clean up, but `add`, `install`, `bootstrap`, and `sync` still install
+real managed copies and (for `add`) record requirements in the selected scope —
+global by default. After a global install test, undo it with
+`repertoire remove <skill>`; to avoid global writes entirely, run the install
+test in a disposable `--project` worktree (see "Author a private catalog" →
+local validation) and delete the worktree when finished.
+
 ## Author a private catalog
 
 A private catalog is an ordinary Git repository with a `repertoire.yaml` at
@@ -298,6 +308,12 @@ repertoire --project list --available --catalog company-dev
 repertoire --project install code-reviewer --catalog company-dev --target agents
 ```
 
+Because everything lives inside the scratch worktree, clean up by deleting it
+once you are done — `cd` out first, then `rm -rf "$scratch"`. Nothing was
+written to global Repertoire state, so no `repertoire remove` is needed. If you
+instead ran a global `add` or `install` while testing, undo it explicitly with
+`repertoire remove <skill>`.
+
 For an even lighter loop that never touches the manifest, use an override
 instead of registering a project catalog (see "Test a catalog locally without
 pushing"): the checkout is read directly, and no `catalogs:` entry or removal
@@ -316,6 +332,22 @@ Do not embed tokens, passwords, or other credentials in the catalog URL or any
 manifest. Repertoire delegates authentication to Git. Omit `--ref` to track the
 remote default branch; use a branch for updateable releases or a tag/full commit
 for an immutable catalog snapshot.
+
+## Author an efficient skill
+
+A catalog is only as useful as the skills inside it. Each skill is a directory
+with a required `SKILL.md` (YAML frontmatter plus body) and optional
+`references/`, `assets/`, and `scripts/` subdirectories. Design for progressive
+disclosure: the `name` + `description` are always in an agent's context, the
+body loads only when the skill triggers, and bundled resources load only when
+the body points to them. Keep the always-loaded description tight and explicit
+about when to trigger, keep the body on the common path and under ~500 lines,
+and push edge cases, option tables, and deterministic helpers down into
+`references/` and `scripts/`.
+
+For the full authoring guide — description writing, body style, resource
+organization, multi-variant layout, and a pre-publish checklist — read
+`references/authoring-skills.md`.
 
 ## Bootstrap a project
 
@@ -403,3 +435,10 @@ repertoire list
 When working in a repository, review `repertoire.yaml`,
 `repertoire.lock.json`, or `.repertoire.yaml` changes before reporting
 completion. Report the selected scope, catalog, and targets.
+
+## Reference files
+
+- `references/authoring-skills.md` — how to write an efficient `SKILL.md`
+  package: progressive disclosure, frontmatter and triggering descriptions, body
+  style, organizing `references/`/`assets/`/`scripts/`, multi-variant layout,
+  local-override testing, and a pre-publish checklist.

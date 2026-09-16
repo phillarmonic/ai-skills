@@ -9,6 +9,7 @@ skill in a catalog.
 
 - [Why structure matters](#why-structure-matters)
 - [Anatomy of a skill](#anatomy-of-a-skill)
+- [Catalog manifests versus loose repositories](#catalog-manifests-versus-loose-repositories)
 - [Progressive disclosure](#progressive-disclosure)
 - [Write the frontmatter](#write-the-frontmatter)
 - [Write the description that triggers](#write-the-description-that-triggers)
@@ -38,12 +39,23 @@ skill-name/
 ├── references/       # optional: deep docs read on demand
 ├── assets/           # optional: files used in output (templates, configs, icons)
 ├── scripts/          # optional: executable helpers for deterministic work
-└── stubs.yaml        # optional: Repertoire file-backed stubs (see SKILL.md)
+└── stubs.yaml        # optional: Repertoire file-backed stubs (see references/stubs.md)
 ```
 
 Only `SKILL.md` is required. Keep every supporting file inside the skill
 directory so Repertoire installs the complete package. Paths must stay contained
 within the directory.
+
+## Catalog manifests versus loose repositories
+
+A Git repository of `SKILL.md` directories can be installed as a loose catalog
+without a `repertoire.yaml`. That is enough to discover, lock, and copy skills.
+
+Variants, always-on instructions, optional hooks, and `stubs.yaml` require a
+real catalog `repertoire.yaml`. `repertoire catalog init` writes that starting
+point (catalog name, skill keys, placeholder `SKILL.md` files) into the current
+directory without running Git. Fill in the placeholders, then test with a
+local override before you push.
 
 ## Progressive disclosure
 
@@ -141,7 +153,7 @@ Use this exact template:
   agent can jump to the relevant part instead of loading the whole file.
 - **`assets/`** holds files that appear in the *output*: templates, starter
   configs, icons, fonts. In Repertoire, prefer exposing single starter files
-  through `stubs.yaml` (see the SKILL.md "Author and use file stubs" section) so
+  through `stubs.yaml` (see `references/stubs.md`) so
   agents fetch a verified path instead of pasting content.
 - **`scripts/`** holds executable helpers for deterministic, repetitive, or
   error-prone work. A script runs without its source entering context, which

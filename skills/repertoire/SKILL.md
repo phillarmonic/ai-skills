@@ -6,15 +6,20 @@ description: >-
   repertoire.yaml, repertoire.lock.json, .repertoire.yaml, skill catalogs,
   project or global skill installation, multi-agent targets, bootstrap or sync
   workflows, platform variants, managed hooks and project artifacts, catalog
-  ambiguity, managed-skill safety errors, local catalog overrides for
-  testing skill repositories without pushing, or authoring an efficient
-  SKILL.md package with references, assets, and scripts.
+  ambiguity, managed-skill safety errors, local catalog overrides, repertoire
+  init, catalog init, repertoire show, --dry-run, loose catalogs, installing
+  from a repository URL or local path without a catalog manifest, or authoring
+  an efficient SKILL.md package with references, assets, and scripts.
 ---
 
 # Repertoire
 
-Use Repertoire to manage portable `SKILL.md` packages across Codex, Claude
-Code, Cursor, Gemini CLI, Windsurf, Cline, Roo Code, Kiro, Junie, Kimi Code,
+Repertoire is a package manager for agent skills: named catalogs, a lock with
+content digests, and a manifest you commit so every laptop and CI job gets the
+same skills. It never overwrites edits you made by hand and never phones home.
+
+Use it to manage portable `SKILL.md` packages across Codex, Claude Code,
+Cursor, Gemini CLI, Windsurf, Cline, Roo Code, Kiro, Junie, Kimi Code,
 OpenCode, GitHub Copilot, OpenClaw, and shared `.agents` setups.
 
 ## Establish context
@@ -83,7 +88,7 @@ repertoire --project add graphify --target codex --with-hooks
 `add` accepts several skills at once: comma-separated names, multiple
 arguments, or quoted glob patterns matched against the skills offered by the
 visible catalogs. A pattern that matches nothing is an error. Always quote
-globs — unquoted, zsh aborts with `no matches found` before Repertoire runs:
+globs (unquoted, zsh aborts with `no matches found` before Repertoire runs):
 
 ```bash
 repertoire add zensical,zensical-glossary --target all
@@ -120,6 +125,94 @@ For the optional `artifacts:` channel, interactive `add` prompts before
 installing, and noninteractive commands skip it unless `--with-hooks` is
 present. Use `--no-hooks` to suppress or remove the optional artifacts.
 Repertoire copies hook data but does not execute hooks during installation.
+
+## Install from a repository without a manifest
+
+A Git URL, `owner/repo` GitHub shorthand, or local path is a catalog source.
+`add` registers it in the selected scope (name from the repo basename, or
+`--name`) and installs every skill it offers. Repeat `--skill` or append
+`/<skill>` (or a GitHub `/tree/<ref>/<path>` tail) to install a subset:
+
+```bash
+repertoire add /path/to/agent-skills --target agents
+repertoire add https://github.com/example/agent-skills.git --name company --skill code-reviewer
+repertoire add github.com/example/agent-skills/code-reviewer --target all
+```
+
+Short names and source-qualified IDs still resolve first. `add zensical` and
+`add github.com/phillarmonic/ai-skills/zensical` are unchanged. If the derived
+catalog name is already used by a different source, pass `--name`.
+
+A source with no `repertoire.yaml` (or with a file that has no `catalog:`
+section) is a loose catalog. Repertoire walks up to four directory levels for
+valid `SKILL.md` packages, synthesizes the catalog in memory, and marks the
+source `(loose)` in `catalog list` and `list --available`. Duplicate frontmatter
+names across discovered directories are an error. Pass `--name` when the
+directory basename is not a valid catalog name.
+
+Loose catalogs install and lock like any other source. They cannot declare
+variants, instructions, hooks, or stubs. Write a real `repertoire.yaml`
+(`repertoire catalog init` is the starting point) when those features are
+needed.
+
+## Start a project (init)
+
+From a Git worktree, write a starter project manifest without installing:
+
+```bash
+repertoire init
+```
+
+The file lists every built-in `phillarmonic` skill with source-qualified IDs
+and `scope: global`. Edit it, then run `repertoire bootstrap`. If `skills`
+already exist, `init` refuses unless you pass `--force`. `--force` replaces the
+`skills` section and leaves `catalogs` and `requirements` in place.
+`--global` is rejected; this command is project-only.
+
+## Scaffold a catalog (catalog init)
+
+Write a catalog `repertoire.yaml` and placeholder `SKILL.md` files into the
+current directory. It does not run Git:
+
+```bash
+repertoire catalog init company --skill code-reviewer --skill shared-helpers
+```
+
+Omit `[name]` to derive the catalog name from the directory basename
+(lower-case kebab). Omit `--skill` to create one example skill named
+`<name>-example`. An existing `repertoire.yaml` is refused unless you pass
+`--force`. Then fill in each `SKILL.md` and test with a local override (see
+below).
+
+## Inspect provenance (show)
+
+Print where an installed skill came from and whether each target copy is
+intact, instead of reading the lock file by hand:
+
+```bash
+repertoire show zensical
+repertoire show zensical --format json
+```
+
+Output includes catalog, redacted source, ref, resolved commit, content digest,
+declared versus ad hoc, hooks choice, and one row per target (`intact`,
+`modified`, or `missing`). A loose catalog is marked as such. If the catalog
+cache is absent, lock data still prints and `catalog_cache` is `absent`.
+
+## Preview with --dry-run
+
+`--dry-run` prints the writes and refusals a mutating command would perform
+and leaves the filesystem, lock, and manifest unchanged. Prefer it before any
+`--force`:
+
+```bash
+repertoire --dry-run add zensical --target agents
+repertoire --dry-run update zensical
+repertoire --dry-run bootstrap
+```
+
+`list`, `show`, `doctor`, `stub`, and `completion` ignore the flag and print a
+note on stderr.
 
 ## Configure catalogs
 
@@ -179,24 +272,23 @@ state to clean up, but `add`, `install`, `bootstrap`, and `sync` still install
 real managed copies and (for `add`) record requirements in the selected scope —
 global by default. After a global install test, undo it with
 `repertoire remove <skill>`; to avoid global writes entirely, run the install
-test in a disposable `--project` worktree (see "Author a private catalog" →
-local validation) and delete the worktree when finished.
+test in a disposable `--project` worktree (see "Author a private catalog") and
+delete the worktree when finished.
 
 ## Author a private catalog
 
 A private catalog is an ordinary Git repository with a `repertoire.yaml` at
-its root. Keep each skill in its own directory and list that contained relative
-path in the catalog manifest:
+its root. Prefer `repertoire catalog init` over writing the tree by hand.
+Keep each skill in its own directory and list that contained relative path in
+the catalog manifest:
 
 ```text
 company-skills/
 ├── repertoire.yaml
 └── skills/
-    ├── code-reviewer/
-    │   ├── SKILL.md
-    │   └── references/
-    └── release-helper/
-        └── SKILL.md
+    └── code-reviewer/
+        ├── SKILL.md
+        └── references/
 ```
 
 ```yaml
@@ -221,8 +313,6 @@ catalog:
             source: project-files/hooks.json
             destination: .codex/hooks.json
             mode: json-merge
-    release-helper:
-      path: skills/release-helper
 ```
 
 A skill entry exposes two per-target managed-file channels that share one
@@ -254,46 +344,6 @@ Variant directories may have different directory names, but their frontmatter
 the `instructions:` and `artifacts:` channels are `copy`, `markdown-section`,
 and `json-merge`; copied hook scripts may set `executable: true`. Source and
 destination paths must remain contained.
-
-## Author and use file stubs
-
-A skill may expose small file-backed stubs through an optional `stubs.yaml` in
-its root:
-
-```yaml
-schema: 1
-stubs:
-  editorconfig:
-    description: Ensure text files end with a newline.
-    path: assets/.editorconfig
-    instructions: |
-      Create or merge the repository-root .editorconfig while preserving
-      existing settings.
-```
-
-Each stub points to one contained regular file and includes non-empty
-description and instructions. Install the containing skill, then ask Repertoire
-for a verified local asset path:
-
-```bash
-repertoire stub list
-repertoire stub list common-stubs
-repertoire stub get common-stubs/editorconfig
-```
-
-Repertoire prints the path and instructions for the agent. By default it does
-not copy, merge, execute, or print the asset itself. When the stub instructions
-call for a wholesale file creation, add `--raw` to write only the asset bytes to
-stdout, which is safe to redirect:
-
-```bash
-repertoire stub get --raw common-stubs/gitattributes > .gitattributes
-```
-
-Never redirect the default (advisory) output into a file: it emits the
-`Stub`/`Description`/`Asset`/`Instructions` header, not the asset content. Use
-the advisory form only to locate the `Asset:` path when the instructions require
-merging into an existing file.
 
 Validate locally before publishing from a disposable Git worktree. Project
 scope keeps both the test registration and installed copy out of the user's
@@ -333,20 +383,19 @@ manifest. Repertoire delegates authentication to Git. Omit `--ref` to track the
 remote default branch; use a branch for updateable releases or a tag/full commit
 for an immutable catalog snapshot.
 
+## Author and use file stubs
+
+A skill may expose small file-backed stubs through `stubs.yaml`. For the schema,
+`stub list` / `stub get` (including `--raw`), and the advisory-output warning,
+read `references/stubs.md`. Loose catalogs cannot ship stubs until they have a
+real `repertoire.yaml`.
+
 ## Author an efficient skill
 
-A catalog is only as useful as the skills inside it. Each skill is a directory
-with a required `SKILL.md` (YAML frontmatter plus body) and optional
-`references/`, `assets/`, and `scripts/` subdirectories. Design for progressive
-disclosure: the `name` + `description` are always in an agent's context, the
-body loads only when the skill triggers, and bundled resources load only when
-the body points to them. Keep the always-loaded description tight and explicit
-about when to trigger, keep the body on the common path and under ~500 lines,
-and push edge cases, option tables, and deterministic helpers down into
-`references/` and `scripts/`.
-
-For the full authoring guide — description writing, body style, resource
-organization, multi-variant layout, and a pre-publish checklist — read
+Keep the frontmatter description tight and explicit about when to trigger, keep
+the body on the common path and under ~500 lines, and push edge cases into
+`references/` and `scripts/`. For description writing, body style, resource
+layout, variants, and a pre-publish checklist, read
 `references/authoring-skills.md`.
 
 ## Bootstrap a project
@@ -367,11 +416,6 @@ skills:
   github.com/phillarmonic/ai-skills/zensical:
     scope: global
     targets: [codex]
-
-  github.com/example/company-skills/phillarmonkey-code:
-    scope: project
-    targets: [agents]
-    hooks: true
 ```
 
 Then run:
@@ -388,6 +432,8 @@ the Git worktree. `bootstrap` installs or repairs declared copies using current
 catalog state. Run `repertoire sync` when catalogs should be refreshed before
 synchronizing the bootstrap declarations. Removing a declaration does not
 uninstall an existing skill; use `repertoire remove <skill>` explicitly.
+
+Prefer `repertoire init` when you want the starter file without installing.
 
 ## Update, repair, and remove
 
@@ -410,8 +456,9 @@ state. `remove` only removes content that Repertoire can verify it manages.
 ## Handle safety failures
 
 Repertoire tracks catalog source, commit, digest, targets, and installed
-locations. If a target is unmanaged or locally modified, inspect it before
-using `--force`. Never discard local changes merely to make a command pass.
+locations. If a target is unmanaged or locally modified, inspect it
+(`repertoire show <skill>`) and prefer `--dry-run` before using `--force`.
+Never discard local changes merely to make a command pass.
 
 When a global skill is already managed from another source or ref, confirm that
 replacing the shared installation is intended before using `--force`.
@@ -430,6 +477,7 @@ After a mutating workflow, inspect state and confirm the intended target:
 
 ```bash
 repertoire list
+repertoire show <skill>
 ```
 
 When working in a repository, review `repertoire.yaml`,
@@ -442,3 +490,4 @@ completion. Report the selected scope, catalog, and targets.
   package: progressive disclosure, frontmatter and triggering descriptions, body
   style, organizing `references/`/`assets/`/`scripts/`, multi-variant layout,
   local-override testing, and a pre-publish checklist.
+- `references/stubs.md` — `stubs.yaml` schema and `repertoire stub` usage.

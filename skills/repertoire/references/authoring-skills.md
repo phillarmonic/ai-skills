@@ -39,7 +39,8 @@ skill-name/
 ├── references/       # optional: deep docs read on demand
 ├── assets/           # optional: files used in output (templates, configs, icons)
 ├── scripts/          # optional: executable helpers for deterministic work
-└── stubs.yaml        # optional: Repertoire file-backed stubs (see references/stubs.md)
+├── stubs.yaml        # optional: Repertoire file-backed stubs (see references/stubs.md)
+└── REPERTOIRE.digest.asc  # required when consumers trust the catalog (see references/trust.md)
 ```
 
 Only `SKILL.md` is required. Keep every supporting file inside the skill
@@ -56,6 +57,10 @@ real catalog `repertoire.yaml`. `repertoire catalog init` writes that starting
 point (catalog name, skill keys, placeholder `SKILL.md` files) into the current
 directory without running Git. Fill in the placeholders, then test with a
 local override before you push.
+
+A consumer trust block is separate from the catalog manifest. When that block
+is present, the local checkout still has to carry a signed commit and a
+`REPERTOIRE.digest.asc` in each skill directory. See `references/trust.md`.
 
 ## Progressive disclosure
 
@@ -227,3 +232,5 @@ linger in every target you added.
 - [ ] Every path stays inside the skill directory.
 - [ ] Triggering and instructions verified from a local override checkout, and
       any throwaway worktree or global test install cleaned up afterward.
+- [ ] If consumers will trust the catalog, the commit is signed and each skill
+      directory (and each variant directory) has `REPERTOIRE.digest.asc`.

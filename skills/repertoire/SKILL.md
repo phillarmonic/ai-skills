@@ -7,8 +7,9 @@ description: >-
   project or global skill installation, multi-agent targets, bootstrap or sync
   workflows, platform variants, managed hooks and project artifacts, catalog
   ambiguity, managed-skill safety errors, local catalog overrides, repertoire
-  init, catalog init, repertoire show, --dry-run, loose catalogs, installing
-  from a repository URL or local path without a catalog manifest, or authoring
+  init, catalog init, repertoire show, --dry-run, loose catalogs, catalog
+  trust blocks, GPG commit and skill-digest signatures, installing from a
+  repository URL or local path without a catalog manifest, or authoring
   an efficient SKILL.md package with references, assets, and scripts.
 ---
 
@@ -266,14 +267,11 @@ clear error, and a malformed `--override` pair (no `=`, empty name, or empty
 path) is rejected even by commands that do not materialize a catalog. Remove
 the override to return to the registered remote source.
 
-An override only redirects where a catalog is *read* from; it does not change
-what a command *writes*. Read-only commands like `list --available` leave no
-state to clean up, but `add`, `install`, `bootstrap`, and `sync` still install
-real managed copies and (for `add`) record requirements in the selected scope —
-global by default. After a global install test, undo it with
-`repertoire remove <skill>`; to avoid global writes entirely, run the install
-test in a disposable `--project` worktree (see "Author a private catalog") and
-delete the worktree when finished.
+An override only redirects where a catalog is read from. `add`, `install`,
+`bootstrap`, and `sync` still install real managed copies (and `add` records
+a requirement) in the selected scope, global by default. A trust block on
+that catalog still applies to the local checkout. Undo a global test with
+`repertoire remove <skill>`, or test in a disposable `--project` worktree.
 
 ## Author a private catalog
 
@@ -358,16 +356,11 @@ repertoire --project list --available --catalog company-dev
 repertoire --project install code-reviewer --catalog company-dev --target agents
 ```
 
-Because everything lives inside the scratch worktree, clean up by deleting it
-once you are done — `cd` out first, then `rm -rf "$scratch"`. Nothing was
-written to global Repertoire state, so no `repertoire remove` is needed. If you
-instead ran a global `add` or `install` while testing, undo it explicitly with
-`repertoire remove <skill>`.
+Delete the scratch worktree when you are done (`cd` out, then `rm -rf "$scratch"`).
+A global `add` or `install` during the test still needs `repertoire remove <skill>`.
 
-For an even lighter loop that never touches the manifest, use an override
-instead of registering a project catalog (see "Test a catalog locally without
-pushing"): the checkout is read directly, and no `catalogs:` entry or removal
-step is involved.
+For a lighter loop with no `catalogs:` entry, use an override instead
+(see "Test a catalog locally without pushing").
 
 Commit and push the repository to a private Git remote, grant users read access,
 then register the remote using SSH or credential-helper-backed HTTPS:
@@ -453,6 +446,16 @@ that catalog and stops.
 `install` without a name repairs declared requirements from current catalog
 state. `remove` only removes content that Repertoire can verify it manages.
 
+## Trust a catalog
+
+A `trust` block on a catalog registration names the public keys allowed to
+sign that catalog. Registrations without one do not invoke `gpg`. When it is
+present, `add`, `install`, `update`, and `bootstrap` require a signed commit
+and a `REPERTOIRE.digest.asc` in every skill directory, including variants and
+loose-catalog skills. Overrides and local paths do not skip the check, and
+`--force` does not either. A failure leaves the lock unchanged. The shape,
+lock fingerprints, and how to sign are in `references/trust.md`.
+
 ## Handle safety failures
 
 Repertoire tracks catalog source, commit, digest, targets, and installed
@@ -490,4 +493,6 @@ completion. Report the selected scope, catalog, and targets.
   package: progressive disclosure, frontmatter and triggering descriptions, body
   style, organizing `references/`/`assets/`/`scripts/`, multi-variant layout,
   local-override testing, and a pre-publish checklist.
+- `references/trust.md` — catalog trust blocks, GPG commit and skill-digest
+  signatures, lock fingerprints, and how to produce `REPERTOIRE.digest.asc`.
 - `references/stubs.md` — `stubs.yaml` schema and `repertoire stub` usage.

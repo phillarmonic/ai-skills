@@ -21,6 +21,8 @@ catalog:
       path: skills/openobserve-investigate
     repertoire:
       path: skills/repertoire
+    slidev:
+      path: skills/slidev
     zensical:
       path: skills/zensical
     zensical-glossary:

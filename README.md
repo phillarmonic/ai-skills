@@ -14,6 +14,7 @@ A catalog of portable AI agent skills maintained by Phillarmonic.
 | `graphify-docker`         | Run graphify and its MCP server through the phillarmonic/graphify-docker image.                                   |
 | `graphifyignore`          | Author and debug `.graphifyignore` files; scope a graphify corpus and manage LLM-free vs LLM phases.              |
 | `openobserve-investigate` | Investigate logs, metrics, traces, incidents, and stream metadata through OpenObserve MCP or its HTTP API.        |
+| `slidev`                  | Build Slidev developer slide decks (vendored from upstream `slidevjs/slidev`, MIT).                               |
 
 ## Repertoire
 

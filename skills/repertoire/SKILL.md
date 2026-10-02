@@ -10,7 +10,8 @@ description: >-
   init, catalog init, repertoire show, --dry-run, loose catalogs, catalog
   trust blocks, GPG commit and skill-digest signatures, installing from a
   repository URL or local path without a catalog manifest, or authoring
-  an efficient SKILL.md package with references, assets, and scripts.
+  an efficient SKILL.md package with references, assets, and scripts, including
+  slash-only skills that install as commands.
 ---
 
 # Repertoire
@@ -387,9 +388,12 @@ real `repertoire.yaml`.
 
 Keep the frontmatter description tight and explicit about when to trigger, keep
 the body on the common path and under ~500 lines, and push edge cases into
-`references/` and `scripts/`. For description writing, body style, resource
-layout, variants, and a pre-publish checklist, read
-`references/authoring-skills.md`.
+`references/` and `scripts/`. A skill meant to be run by hand rather than loaded
+by the model declares `disable-model-invocation: true`, and one that takes input
+declares `argument-hint`; Repertoire installs those as commands for OpenCode,
+which has no equivalent flag of its own. For description writing, body style,
+resource layout, variants, the invocation keys, and a pre-publish checklist,
+read `references/authoring-skills.md`.
 
 ## Bootstrap a project
 

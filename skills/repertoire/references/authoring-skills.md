@@ -96,7 +96,35 @@ description: >-
 - Use a folded scalar (`>-`) for multi-line descriptions so it stays one logical
   string.
 - Add other keys only when the catalog schema needs them; do not invent
-  frontmatter fields.
+  frontmatter fields. The two invocation keys below are not inventions: they are
+  a shared convention, and Repertoire reads them when installing.
+
+### Mark a skill as invoked, not loaded
+
+Two convention keys say a skill is meant to be run explicitly:
+
+```yaml
+---
+name: deploy-preview
+description: Deploy a preview environment for the current branch.
+argument-hint: "[environment]"
+disable-model-invocation: true
+---
+```
+
+`disable-model-invocation: true` asks hosts not to load the skill on their own.
+Claude Code honours it directly; OpenCode has no such flag, so Repertoire installs
+the skill into OpenCode's `command` directory as well, where user-invoked entries
+live. The skill directory is still installed in both cases, so `references/`,
+`scripts/`, and other companions stay reachable.
+
+Declare `argument-hint` whenever the skill takes input. Repertoire carries it
+into the command template so the text typed after the command name reaches the
+model — OpenCode substitutes that text only where the template asks for it, so a
+skill without the hint drops whatever the user typed after `/name`.
+
+Neither key changes what other targets install; they receive the same skill
+directory as any other.
 
 ## Write the description that triggers
 
@@ -224,6 +252,9 @@ linger in every target you added.
 
 - [ ] Directory name, catalog key, and frontmatter `name` all match.
 - [ ] Description states what it does AND when to trigger, with concrete hooks.
+- [ ] A skill that only makes sense when run by hand declares
+      `disable-model-invocation: true`, and one that takes input declares
+      `argument-hint`.
 - [ ] Body is imperative, leads with the common path, under ~500 lines.
 - [ ] Detail beyond the common path lives in `references/`, each with a pointer.
 - [ ] References over ~300 lines start with a table of contents.

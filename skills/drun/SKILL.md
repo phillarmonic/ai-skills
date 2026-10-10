@@ -44,7 +44,9 @@ Drun is a fluent automation DSL. The interpreter binary is `xdrun`
 8. Prefer small, readable tasks that explain intent with `means`, `info`, and
    `step`.
 9. For AI-driven CI or noisy checks, prefer `mode "ci"` so successful shell
-   stdout/stderr stays buffered and only failure output is emitted.
+   stdout/stderr stays buffered and only failure output is emitted. The run then
+   ends with a per-step verdict summary (`STEP=... STATUS=passed|failed`); see
+   `references/ci-mode.md`.
 10. After editing a spec, run the narrowest relevant `xdrun` command to verify.
 
 ## Calling tasks and passing arguments
@@ -253,6 +255,10 @@ Patterns that repeat across Phillarmonic specs — follow them in our repos:
   `promote changelog` → `update project version to`.
 - `xdrun ci --task-mode=normal` overrides buffering at runtime when you need
   to watch a ci-mode task stream; `--task-mode=ci` does the reverse.
+- A ci run ends with a per-step verdict (`STEP=<slug> STATUS=passed|failed`
+  plus a `CI_STATUS=` line). Tune it with `--ci-summary=text` (default),
+  `--ci-summary=json` for a single machine-readable line, or
+  `--ci-summary=off` when only the exit code matters.
 
 ## Writing good specs
 
@@ -281,7 +287,8 @@ Patterns that repeat across Phillarmonic specs — follow them in our repos:
 - Treat `.drun/spec.drun` as the source of truth for project automation.
 - Use `xdrun --list` to discover available workflows.
 - `mode "ci"` buffers normal shell stdout/stderr and only prints that buffer
-  when a command fails.
+  when a command fails; the run then ends with a per-step summary unless
+  `--ci-summary=off` is passed.
 - Validate with targeted runs such as `xdrun test` or
   `xdrun build --dry-run`.
 
@@ -309,6 +316,7 @@ task "shell" means "Open PowerShell":
   run "pwsh.exe" attached
 
 task "ci" mode "ci" means "Run noisy checks with buffered output":
+  step "Tests"
   run "go test ./..."
 ```
 
@@ -350,3 +358,5 @@ traps to know before writing code:
 - `references/interactive-input.md` — `confirm` gates and `prompt` input:
   surface forms, non-interactive/CI resolution, `--yes`/`--no` and dry-run
   behavior, and traps (gate vs. `as $var`, `try`/`catch` interaction).
+- `references/ci-mode.md` — `mode "ci"` buffering, the per-step summary
+  (`STEP=`/`CI_STATUS=`), and `--ci-summary=text|json|off`.

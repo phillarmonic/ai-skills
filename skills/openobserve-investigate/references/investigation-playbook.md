@@ -66,17 +66,39 @@ count can report roughly double the real number of calls. When you count, filter
 on the dimension you mean rather than on rows, and remember a metric family may
 expose a bare stream alongside its `_count`/`_sum`/`_bucket` streams.
 
+## Scoping to a shared instance
+
+An organization is not a project. One instance commonly ingests several
+projects, folders, or repositories into the same stream — a shared server or
+collector tags every call it handles, whoever made it. Before filtering or
+aggregating, find the project identity attribute in the schema
+(`service_project_path`, `service_project_folder`, or a vendor equivalent),
+list its distinct values, and constrain the query to the one you mean:
+
+```sql
+SELECT <project_attr>, count(*) AS n FROM "app_logs"
+GROUP BY <project_attr> ORDER BY n DESC
+```
+
+Without that scope, a count, a percentile, or a top-N silently blends every
+project the instance has seen. Prefer a full-path attribute over a
+basename-style `*_folder`: the folder is only the directory a process started
+in, so two unrelated workloads can share it and one workload can appear under
+several folders.
+
 ## Cost and precision
 
 - Start narrow; widen only after a no-result check of stream, schema, timezone,
   and units.
 - Select columns instead of `SELECT *` after schema discovery.
 - Aggregate first when estimating blast radius.
-- Prefer JSON for a first pass; reach for CSV only for a large, unfiltered
-  tabular read. CSV rendering can silently drop hits on some filtered or
-  ordered queries — including `GROUP BY`/`ORDER BY` aggregations, which is how
-  a first pass often starts — so treat an empty `hits` with `total > 0` as a
-  rendering problem and retry in JSON.
+- Prefer JSON for a first pass: rows arrive in `hits`. With
+  `agent_options.output_format="csv"` (or `"md_table"`) the server instead puts
+  the rows in a single serialized `data` field and leaves `hits` empty, and the
+  default `detail="summary"` projection drops `data` — so a CSV query returns
+  column names and a correct `total` with no rows. This holds for every query
+  shape, not just filtered or ordered ones. Get `data` by asking for
+  `detail="full"` (through `tools_call`), or simply keep JSON.
 - Report the distribution, not just the mean: p50, p90, p95, and max. When the
   maximum dwarfs p50, name the single outlier and its share of the total, since
   one call can dominate a sum (a 180 s call was 86% of a 208 s tool total). A
@@ -117,9 +139,10 @@ expose a bare stream alongside its `_count`/`_sum`/`_bucket` streams.
 - Empty result: verify signal type, timestamp units, ingest delay, and bounds
   before concluding that no event occurred.
 - Empty `hits` with `total > 0`: `total` is the server-side match count; the
-  rows were found but not delivered. Drop `agent_options.output_format="csv"`
-  and retry in JSON (CSV rendering silently drops hits on some filtered or
-  ordered queries), and check `from`/`size` pagination before concluding
+  rows matched but were not delivered. The usual cause is a `csv`/`md_table`
+  `output_format`, whose rows live in a serialized `data` field that the default
+  `detail="summary"` projection omits: retry in JSON (drop `output_format`) or
+  request `detail="full"`. Check `from`/`size` pagination before concluding
   anything.
 - Zero-looking stream stats: `StreamList`/`StreamSchema` statistics
   (`doc_num`, `storage_size`) can report 0 on freshly created or stats-lagged

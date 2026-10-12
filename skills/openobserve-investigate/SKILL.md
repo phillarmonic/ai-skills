@@ -87,10 +87,21 @@ a `*_folder` attribute as the directory the server process was started in, not
 the path an individual operation targeted: a session-scoped folder can tag
 calls that acted on a different repository entirely.
 
-Prefer JSON for a first pass. `agent_options.output_format="csv"` is compact
-for a large tabular read, but CSV rendering silently drops hits on some
-filtered/ordered queries, so if a query returns `total > 0` with empty `hits`,
-retry in JSON; `total` is the match count, not proof rows arrived. Use
+One instance and organization can hold telemetry from several projects at
+once — a shared server, collector, or agent host feeds them all into the same
+streams under a single session identity. Before filtering or aggregating,
+confirm which project attribute is populated, list its distinct values, and
+scope the query to the one you mean; otherwise counts, percentiles, and top-N
+silently mix every project the instance has seen. Prefer a full-path attribute
+over a basename-style `*_folder`.
+
+Prefer JSON for a first pass: rows arrive in `hits`. With
+`agent_options.output_format="csv"` (or `"md_table"`) the server instead returns
+the rows in a serialized `data` field and leaves `hits` empty, and the default
+`detail="summary"` projection drops `data` — so a CSV query yields column names
+and a correct `total` with no rows. Get `data` by asking for `detail="full"`
+(through `tools_call`), or simply keep JSON (`total` is the match count, not
+proof rows arrived). Use
 `agent_options.mode="partition"` for wide-range top-N or aggregation queries;
 do not split a large range into a client-side loop.
 

@@ -47,9 +47,24 @@ the simpler predicates cannot express the filter.
   interval before querying evidence.
 - LLM traces: use session/user summary tools, then inspect per-session turns and
   the trace DAG rather than downloading all spans immediately.
+- `_timestamp` does not mean the same thing in every signal. A log record is
+  usually stamped when it is written (often at completion), while a span is
+  stamped at its start, so a slow request can appear in logs well after the
+  matching span begins. Pivot on correlation IDs and compare a span's own
+  `start_time`/`end_time`; do not read a duration off the log-to-span timestamp
+  delta.
 
 Keep all comparisons in UTC and state the exact bounds. A UI display timezone
 does not change the API's epoch-microsecond bounds.
+
+## Counting records
+
+One logical operation can emit more than one record. A single MCP request
+often produces a protocol-level record and a per-tool record, and a server span
+plus its tool span; the duplicates carry different dimensions, so a naive row
+count can report roughly double the real number of calls. When you count, filter
+on the dimension you mean rather than on rows, and remember a metric family may
+expose a bare stream alongside its `_count`/`_sum`/`_bucket` streams.
 
 ## Cost and precision
 
@@ -57,7 +72,11 @@ does not change the API's epoch-microsecond bounds.
   and units.
 - Select columns instead of `SELECT *` after schema discovery.
 - Aggregate first when estimating blast radius.
-- Use CSV for tabular hits and summary detail for discovery.
+- Prefer JSON for a first pass; reach for CSV only for a large, unfiltered
+  tabular read. CSV rendering can silently drop hits on some filtered or
+  ordered queries — including `GROUP BY`/`ORDER BY` aggregations, which is how
+  a first pass often starts — so treat an empty `hits` with `total > 0` as a
+  rendering problem and retry in JSON.
 - Report the distribution, not just the mean: p50, p90, p95, and max. When the
   maximum dwarfs p50, name the single outlier and its share of the total, since
   one call can dominate a sum (a 180 s call was 86% of a 208 s tool total). A
@@ -87,7 +106,11 @@ does not change the API's epoch-microsecond bounds.
   stream. Never sum a cumulative `_sum` or `_count` stream, because its rows
   are counters; use PromQL `increase()`/`rate()` for a total, and read outcomes
   from a label filter (for example `outcome = 'error_result'`) rather than from
-  a per-row status.
+  a per-row status. A single family can span several services or tools through a
+  shared label, so scope it with a label selector before attributing a value to
+  one of them, and confirm a `_count` series increases monotonically before
+  trusting `rate()`/`histogram_quantile()`, which return `NaN` on a
+  non-monotonic or sparse counter.
 - Suspected silence: before concluding a source stopped emitting, read the
   stream's own range with `StreamSchema` (`doc_time_min`, `doc_time_max`). A
   narrow query window is indistinguishable from a stalled exporter.

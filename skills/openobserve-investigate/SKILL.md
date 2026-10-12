@@ -31,7 +31,9 @@ actual MCP configuration.
   configuration that places server names directly under `mcp`, with `type` and
   `enabled` fields, still loads during migration, so inspect both shapes and
   follow whichever one the file already uses. Run `opencode mcp list` for
-  connection state.
+  connection state, but confirm against the config file and the tools actually
+  exposed in the session: the command can report no servers while a
+  project-scoped or V1-shaped entry is live.
 
 MCP configuration loads at session start. If a server is configured but its
 tools are absent from the session, the session predates the configuration —
@@ -85,10 +87,10 @@ a `*_folder` attribute as the directory the server process was started in, not
 the path an individual operation targeted: a session-scoped folder can tag
 calls that acted on a different repository entirely.
 
-Use `agent_options.output_format="csv"` for compact tabular search results —
-but if a filtered query returns `total > 0` with empty `hits`, retry in JSON:
-CSV rendering silently drops hits on some filtered/ordered queries, and
-`total` is the match count, not proof rows arrived. Use
+Prefer JSON for a first pass. `agent_options.output_format="csv"` is compact
+for a large tabular read, but CSV rendering silently drops hits on some
+filtered/ordered queries, so if a query returns `total > 0` with empty `hits`,
+retry in JSON; `total` is the match count, not proof rows arrived. Use
 `agent_options.mode="partition"` for wide-range top-N or aggregation queries;
 do not split a large range into a client-side loop.
 

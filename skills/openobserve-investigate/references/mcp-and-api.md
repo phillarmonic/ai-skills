@@ -152,8 +152,13 @@ opencode mcp add openobserve --url https://your-instance/api/your-organization/m
 opencode mcp list
 ```
 
-`opencode mcp list` reports `connected` once the server is reachable. A
-configuration change needs a new session before the tools appear. OpenCode
+`opencode mcp list` reports `connected` once the server is reachable, but do
+not treat it as authoritative: it can print `No MCP servers configured` even
+while a live server is defined only in a project-scoped
+`.opencode/opencode.json(c)` or in the older V1 shape that names servers
+directly under `mcp`. Confirm against the config file and the tools actually
+exposed in the session. A configuration change needs a new session before the
+tools appear. OpenCode
 names tools `<server>_<tool>` and exposes them through Code Mode as
 `tools.<server>.<tool>` by default; set `codemode` to `false` on the entry to
 keep them on the native tool list instead.

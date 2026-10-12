@@ -32,7 +32,7 @@ window functions, and the `QUALIFY` clause.
 ```sql
 WITH slow AS (
   SELECT operation_name, duration
-  FROM "backstage"
+  FROM "app_logs"
   WHERE duration > 1000000
 )
 SELECT operation_name, count(*) AS n, round(avg(duration) / 1000.0, 1) AS avg_ms
@@ -48,7 +48,7 @@ LIMIT 10
 - The parser lowercases unquoted identifiers, but inferred schema field names
   are not changed. Any field with a capital letter or an unusual character must
   be double-quoted.
-- Quote stream names: `FROM "backstage"`.
+- Quote stream names: `FROM "app_logs"`.
 - String literals use single quotes; escape an embedded quote by doubling it.
 
 ## Time
@@ -60,13 +60,13 @@ LIMIT 10
 
 ```sql
 SELECT histogram(_timestamp, '5 minute') AS bucket, count(*) AS n
-FROM "backstage" GROUP BY bucket ORDER BY bucket
+FROM "app_logs" GROUP BY bucket ORDER BY bucket
 ```
 
 ```sql
 SELECT date_bin(interval '5 minutes', to_timestamp_micros(_timestamp)) AS bucket,
        count(*) AS n
-FROM "backstage" GROUP BY bucket LIMIT 3
+FROM "app_logs" GROUP BY bucket LIMIT 3
 ```
 
 - `histogram` needs an explicit duration (`'30 seconds'`, `'1 minute'`,
@@ -111,6 +111,9 @@ Trace streams in particular often have no full-text fields, so prefer
 - Use `field is null` and `field is not null`. `field = ''` and `field != ''` do
   not behave correctly for numeric fields.
 - Use SQL operators, so `>=` rather than `=>`.
+- Compare boolean fields unquoted, for example `success = false`. Quoting the
+  literal makes the planner attempt a coercion and fail with
+  `Cannot infer common argument type for comparison operation Boolean = Utf8`.
 
 ## Aggregates
 
@@ -119,7 +122,7 @@ Trace streams in particular often have no full-text fields, so prefer
 
 ```sql
 SELECT count(case when status_code <> 0 then 1 end) AS errors, count(*) AS total
-FROM "backstage"
+FROM "app_logs"
 ```
 
 Percentiles and top-K are approximate:
@@ -160,6 +163,12 @@ Metric families are queried with PromQL, which OpenObserve describes as about
 their own streams (`_count`, `_sum`, `_bucket`, `_min`, `_max`) which SQL can
 query, subject to the cumulative-counter caveat in the investigation playbook.
 
+A family is shared across everything that emits it, so scope it with a label
+selector before reading one service's or tool's values. A `_count`/`_sum`
+series is cumulative: confirm it increases monotonically before relying on
+`rate()` or `histogram_quantile()`, which return `NaN` on a non-monotonic or
+sparse counter.
+
 ## Verified behaviours
 
 Confirmed against a live instance:
@@ -167,6 +176,8 @@ Confirmed against a live instance:
 - `histogram(_timestamp, '5 minute')`, `date_bin(interval '5 minutes', ...)`,
   and `to_timestamp_micros(...)` all work.
 - `count(case when ... then 1 end)` works.
+- A quoted boolean (`success = 'false'`) fails type coercion; the unquoted form
+  (`success = false`) works.
 - `str_match(field, 'value')` works against a trace attribute.
 - `match_all(...)` against a trace stream fails with the full-text-field error
   shown above.

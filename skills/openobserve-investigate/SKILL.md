@@ -98,7 +98,10 @@ the source application. Profile them before filtering — see
 [references/investigation-playbook.md](references/investigation-playbook.md).
 
 Read [references/investigation-playbook.md](references/investigation-playbook.md)
-for query patterns, correlation guidance, and failure handling.
+for query patterns, correlation guidance, and failure handling. Read
+[references/query-language.md](references/query-language.md) for the SQL
+dialect, the function catalog, and the behaviours verified against a live
+instance.
 
 ## Use MCP tools
 

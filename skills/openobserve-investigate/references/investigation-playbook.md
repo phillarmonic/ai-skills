@@ -79,7 +79,8 @@ does not change the API's epoch-microsecond bounds.
 - Unknown SQL function: the query engine is DataFusion, not another SQL dialect.
   There is no `datetime()`; render a timestamp with
   `to_timestamp_micros(<micros>)` and bucket with
-  `date_trunc('hour', to_timestamp_micros(_timestamp))`.
+  `date_trunc('hour', to_timestamp_micros(_timestamp))`. See
+  [query-language.md](query-language.md) for the dialect and function catalog.
 - Metric streams: each family is its own stream (`_count`, `_sum`, `_bucket`,
   `_min`, `_max`). `StreamList` may also list the bare metric name, but
   `SearchSQL` returns "Search stream not found" for it, so query a family

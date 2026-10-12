@@ -78,6 +78,13 @@ copy an asset into place without first reading the destination file.
 6. Report the time range, streams, queries, returned evidence, gaps, and the
    distinction between facts and hypotheses.
 
+Resource attributes are not standardized across exporters, even for the same
+vendor. One service may emit `service_project_path` while another emits only
+`service_project_folder`, so read the schema before filtering on either. Treat
+a `*_folder` attribute as the directory the server process was started in, not
+the path an individual operation targeted: a session-scoped folder can tag
+calls that acted on a different repository entirely.
+
 Use `agent_options.output_format="csv"` for compact tabular search results —
 but if a filtered query returns `total > 0` with empty `hits`, retry in JSON:
 CSV rendering silently drops hits on some filtered/ordered queries, and

@@ -58,6 +58,11 @@ does not change the API's epoch-microsecond bounds.
 - Select columns instead of `SELECT *` after schema discovery.
 - Aggregate first when estimating blast radius.
 - Use CSV for tabular hits and summary detail for discovery.
+- Report the distribution, not just the mean: p50, p90, p95, and max. When the
+  maximum dwarfs p50, name the single outlier and its share of the total, since
+  one call can dominate a sum (a 180 s call was 86% of a 208 s tool total). A
+  mean alone hides that, and p95 can land below the mean when a single value is
+  extreme.
 - Use async search jobs only for genuinely long searches; discover their exact
   schemas with `tool_search`.
 
@@ -71,6 +76,20 @@ does not change the API's epoch-microsecond bounds.
   is pinned or available in every version.
 - Unknown stream/field: rerun `StreamList`/`StreamSchema` and apply any returned
   query suggestions.
+- Unknown SQL function: the query engine is DataFusion, not another SQL dialect.
+  There is no `datetime()`; render a timestamp with
+  `to_timestamp_micros(<micros>)` and bucket with
+  `date_trunc('hour', to_timestamp_micros(_timestamp))`.
+- Metric streams: each family is its own stream (`_count`, `_sum`, `_bucket`,
+  `_min`, `_max`). `StreamList` may also list the bare metric name, but
+  `SearchSQL` returns "Search stream not found" for it, so query a family
+  stream. Never sum a cumulative `_sum` or `_count` stream, because its rows
+  are counters; use PromQL `increase()`/`rate()` for a total, and read outcomes
+  from a label filter (for example `outcome = 'error_result'`) rather than from
+  a per-row status.
+- Suspected silence: before concluding a source stopped emitting, read the
+  stream's own range with `StreamSchema` (`doc_time_min`, `doc_time_max`). A
+  narrow query window is indistinguishable from a stalled exporter.
 - Empty result: verify signal type, timestamp units, ingest delay, and bounds
   before concluding that no event occurred.
 - Empty `hits` with `total > 0`: `total` is the server-side match count; the

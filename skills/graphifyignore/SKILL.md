@@ -19,10 +19,19 @@ carry over only partially.
 
 ## How .graphifyignore is loaded
 
-- Full **gitignore syntax**: `#` comments, `!` negation, `dir/` directory-only
-  patterns, anchored patterns (any `/` in the pattern anchors it to the ignore
-  file's directory), `*` within a path segment, `**` across segments, and
-  **last-match-wins** — the final matching pattern decides.
+- **gitignore-style syntax**: `#` comments, `!` negation, `dir/` directory-only
+  patterns, anchored patterns (any `/` anchors to the ignore file directory),
+  `*` within a path segment, `**` across segments, and **last-match-wins** —
+  the final matching pattern decides.
+- **Two matching modes** (`detect.py`: `_is_ignored` → `_matches`):
+  - **Anchored** (the pattern contains `/`): matched against the anchor-relative
+    path, globstar-aware.
+  - **Non-anchored** (no `/`): matched against *the full anchor-relative path,
+    the basename, every path segment, and every `/`-joined prefix*. A bare name
+    therefore matches at any depth, **and also matches every descendant of a
+    matching directory** — which is what makes the ignore-all-except idiom work.
+- **`!` cannot re-include a file whose ancestor directory is still excluded**
+  (the gitignore parent-exclusion rule).
 - **Merge order per directory** (lowest to highest priority):
   `$GIT_DIR/info/exclude` → `.gitignore` → `.graphifyignore`. The
   `.graphifyignore` is read last, so its patterns — including `!` negations —
@@ -54,9 +63,35 @@ one.
 already merged. The file exists for *graph-scoping* decisions only: what
 belongs in the knowledge graph, not what belongs in the build.
 
+## The "ignore everything, then add exceptions" idiom
+
+To graph *only* one subtree — the usual case when a repo has a single real
+source folder and the rest is infra, scripts and docs — invert the default:
+
+```gitignore
+# Graph only ext-myapp/; ignore the rest of the repo
+*
+!ext-myapp
+
+# then re-exclude the low-signal parts inside it
+ext-myapp/tests
+ext-myapp/vendor
+```
+
+Why it works: for any path under `ext-myapp/`, `*` matches (as a segment or a
+prefix) **and** `!ext-myapp` also matches (as a prefix), so last-match-wins
+re-includes the whole subtree. Everywhere else `*` is the final match, so the
+path is dropped.
+
+> Divergence from git: in `.gitignore`, a bare `*` followed by `!ext-myapp`
+does **not** re-include the contents of that directory — there the first
+pattern has to be `/*`. `.graphifyignore` re-includes the subtree with the
+plain `!ext-myapp`, so the `/*` workaround is unnecessary here.
+
 ## What belongs in a project's .graphifyignore
 
-Typical graph-scoping exclusions for a code repository:
+Typical graph-scoping exclusions for a code repository (see also the
+ignore-all-except idiom above):
 
 ```gitignore
 # Translation duplicates — one canonical language is enough
@@ -80,10 +115,11 @@ vendor/**/tests/
 
 Common gotchas:
 
-- **A bare `**` ignores everything.** A placeholder `.graphifyignore`
-  containing `**` makes detection report `found 0 code, 0 docs` — the
-  extraction then "succeeds" with a 0-node graph. If detection finds nothing,
-  read the ignore files first.
+- **A lone `**` or `*` ignores everything.** A `.graphifyignore` containing
+  `**` (or `*` with no exception) makes detection report `found 0 code, 0 docs`
+  — extraction then "succeeds" with a 0-node graph. A `*` that is *followed by*
+  `!dir` is fine (that is the idiom above). If detection finds nothing, read
+  the ignore files first.
 - **Enumerate every test extension.** `**/*.spec.ts` does not match
   `*.spec.tsx`; snapshot/replay harnesses often use distinct suffixes
   (`*.e2e.ts`, `*.snapshot.ts`). Missing one leaks hundreds of test files into

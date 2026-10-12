@@ -26,6 +26,12 @@ actual MCP configuration.
 - Claude Desktop: `claude_desktop_config.json` (on macOS under
   `~/Library/Application Support/Claude/`).
 - Cursor: `~/.cursor/mcp.json`. VS Code: workspace `.vscode/mcp.json`.
+- OpenCode: `mcp.servers` in the global `~/.config/opencode/opencode.json(c)`
+  or a project `opencode.json(c)` / `.opencode/opencode.json(c)`. V1
+  configuration that places server names directly under `mcp`, with `type` and
+  `enabled` fields, still loads during migration, so inspect both shapes and
+  follow whichever one the file already uses. Run `opencode mcp list` for
+  connection state.
 
 MCP configuration loads at session start. If a server is configured but its
 tools are absent from the session, the session predates the configuration —
@@ -51,6 +57,7 @@ repertoire stub get openobserve-investigate/claude-code-mcp
 repertoire stub get openobserve-investigate/claude-desktop-mcp
 repertoire stub get openobserve-investigate/cursor-mcp
 repertoire stub get openobserve-investigate/vscode-mcp
+repertoire stub get openobserve-investigate/opencode-mcp
 ```
 
 Follow the returned instructions and merge the asset into the existing client
@@ -88,19 +95,30 @@ for query patterns, correlation guidance, and failure handling.
 
 ## Use MCP tools
 
-Pinned tools normally include `StreamList`, `StreamSchema`, `SearchSQL`,
-`PrometheusRangeQuery`, `GetLatestTraces`, and `GetIncident`.
+The pinned set varies by OpenObserve version. Read `tools/list` from the
+connected server first and treat that response as authoritative. A typical set
+is `StreamList`, `StreamSchema`, `SearchSQL`, `PrometheusRangeQuery`, and
+`GetLatestTraces`, alongside `tool_search` and `tools_call`. Some builds add
+`GetIncident` or trace-graph tools; do not assume one is present.
 
-For other operations:
+Call a pinned tool by its exposed name instead of routing it through
+`tool_search` and `tools_call`, which are for capabilities that are not pinned:
 
 1. Call `tool_search` with the capability, such as `trace DAG` or `search
    around`, and inspect the returned schema.
 2. Call `tools_call` with `tool`, schema-matching `args`, and `detail` set to
    `summary` unless the complete response is necessary.
 
-Hosts prefix names with the configured server name, for example
-`mcp__openobserve__SearchSQL`. Treat schemas returned by the connected server as
-authoritative because versions differ.
+Argument shapes differ between builds even when the tool name is the same.
+Required fields are not always the obvious ones: `GetLatestTraces` in at least
+one build requires `org_id`, `stream_name`, `from`, `size`, `start_time`, and
+`end_time`, and rejects a call that omits the `from` offset. Read the schema the
+server returns before calling a tool for the first time.
+
+Hosts expose names differently. Claude Code prefixes with the server, for
+example `mcp__openobserve__SearchSQL`. OpenCode joins them with an underscore
+(`openobserve_SearchSQL`) and, under its default Code Mode, groups them as
+`tools.openobserve.SearchSQL`.
 
 Read [references/mcp-and-api.md](references/mcp-and-api.md) when configuring a
 client, calling JSON-RPC directly, parsing responses, or using the REST API.

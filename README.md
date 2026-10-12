@@ -62,13 +62,15 @@ repertoire add openobserve-investigate --catalog phillarmonic
 ```
 
 The skill guides schema-first, read-only incident investigation through an OpenObserve MCP server. It also exposes
-verified MCP configuration templates for Cursor, VS Code, and Claude Desktop:
+verified MCP configuration templates for Claude Code, Claude Desktop, Cursor, VS Code, and OpenCode:
 
 ```shell
 repertoire stub list openobserve-investigate
+repertoire stub get openobserve-investigate/claude-code-mcp
+repertoire stub get openobserve-investigate/claude-desktop-mcp
 repertoire stub get openobserve-investigate/cursor-mcp
 repertoire stub get openobserve-investigate/vscode-mcp
-repertoire stub get openobserve-investigate/claude-desktop-mcp
+repertoire stub get openobserve-investigate/opencode-mcp
 ```
 
 `stub get` returns the installed template path and client-specific merge instructions. Templates contain placeholders

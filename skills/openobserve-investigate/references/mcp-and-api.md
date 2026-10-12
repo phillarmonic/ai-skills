@@ -115,6 +115,49 @@ Keep the token in environment-backed secret configuration. Register one server
 per organization when investigating multiple environments so org boundaries
 remain explicit.
 
+### OpenCode
+
+OpenCode reads servers from `mcp.servers.<name>` in the global
+`~/.config/opencode/opencode.json(c)` or a project `opencode.json(c)` or
+`.opencode/opencode.json(c)`. Edits for V1, which places server names directly
+under `mcp` with `type` and `enabled` fields, still load during migration, so
+keep the shape the file already uses and do not mix the two. Set `oauth` to
+`false` so OpenCode sends the Basic header instead of attempting OAuth
+discovery. Reference the token with `{env:...}`, which substitutes a whole
+value; `$NAME` is not expanded in JSON strings. The variable holds the complete
+header value, including the `Basic ` prefix.
+
+```jsonc title="opencode.jsonc"
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "openobserve": {
+        "type": "remote",
+        "url": "https://your-instance/api/your-organization/mcp",
+        "oauth": false,
+        "headers": {
+          "Authorization": "{env:OPENOBSERVE_AUTHORIZATION}"
+        }
+      }
+    }
+  }
+}
+```
+
+Add the server with the CLI when no entry exists, then edit it for the header:
+
+```bash
+opencode mcp add openobserve --url https://your-instance/api/your-organization/mcp
+opencode mcp list
+```
+
+`opencode mcp list` reports `connected` once the server is reachable. A
+configuration change needs a new session before the tools appear. OpenCode
+names tools `<server>_<tool>` and exposes them through Code Mode as
+`tools.<server>.<tool>` by default; set `codemode` to `false` on the entry to
+keep them on the native tool list instead.
+
 ## Verify a configured endpoint
 
 After writing client configuration, prove the endpoint works before ending

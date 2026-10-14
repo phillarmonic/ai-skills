@@ -41,7 +41,8 @@ roots. Use `--project` when a skill should live in the current Git worktree.
 Shell completion suggests catalogs Repertoire already knows (built-in, global
 and project registrations, bootstrap catalogs, lock sources, and cached
 remotes), including source URLs for `catalog add`. Prefer tab-completing those
-known catalogs instead of inventing catalog names.
+known catalogs instead of inventing catalog names. Where a command accepts a
+comma-separated list, completion continues after the comma.
 
 Use Repertoire commands instead of manually editing generated
 `repertoire.lock.json` files or managed skill copies.
@@ -110,10 +111,14 @@ requirement:
 
 ```bash
 repertoire install zensical --target agents
+repertoire install zensical,graphify --target agents
 repertoire install github.com/phillarmonic/ai-skills/zensical --target agents
 repertoire install
 repertoire install --target all
 ```
+
+The same comma-list rule applies to `update`, `remove`, `show`, `stub list`,
+`stub get`, `catalog update`, and `catalog remove`.
 
 Without `--target`, Repertoire detects existing agent configuration or skill
 directories. Use `--target all` only when copies should be created for every
@@ -192,13 +197,16 @@ intact, instead of reading the lock file by hand:
 
 ```bash
 repertoire show zensical
+repertoire show zensical,graphify
 repertoire show zensical --format json
 ```
 
 Output includes catalog, redacted source, ref, resolved commit, content digest,
 declared versus ad hoc, hooks choice, and one row per target (`intact`,
 `modified`, or `missing`). A loose catalog is marked as such. If the catalog
-cache is absent, lock data still prints and `catalog_cache` is `absent`.
+cache is absent, lock data still prints and `catalog_cache` is `absent`. Several
+names print one block each; with more than one, `--format json` emits an array
+instead of the single object a one-name call prints.
 
 ## Preview with --dry-run
 
@@ -223,6 +231,7 @@ Register non-built-in catalogs explicitly:
 repertoire catalog add git@github.com:example/company-skills.git --name company --ref main
 repertoire catalog add /path/to/skills --name local
 repertoire catalog update
+repertoire catalog update company,local
 ```
 
 Private catalog authentication belongs in normal Git credential helpers or SSH
@@ -235,7 +244,11 @@ reference it:
 ```bash
 repertoire list
 repertoire catalog remove company
+repertoire catalog remove company,local
 ```
+
+`catalog update` and `catalog remove` take several names. `catalog remove`
+checks every name before changing the manifest, so a bad name aborts the call.
 
 ## Test a catalog locally without pushing
 
@@ -381,7 +394,8 @@ for an immutable catalog snapshot.
 A skill may expose small file-backed stubs through `stubs.yaml`. For the schema,
 `stub list` / `stub get` (including `--raw`), and the advisory-output warning,
 read `references/stubs.md`. Loose catalogs cannot ship stubs until they have a
-real `repertoire.yaml`.
+real `repertoire.yaml`. `stub list` takes skill names and `stub get` takes
+`<skill>/<stub>` ids; both accept several names at once.
 
 ## Author an efficient skill
 
@@ -432,17 +446,20 @@ Prefer `repertoire init` when you want the starter file without installing.
 
 ```bash
 repertoire update zensical
+repertoire update zensical,graphify
 repertoire update company
+repertoire update company,team
 repertoire update
 repertoire update graphify --with-hooks
 repertoire update graphify --no-hooks
 repertoire install
 repertoire remove zensical
+repertoire remove zensical,graphify
 ```
 
-`update` refreshes tracking catalogs and reinstalls selected managed skills. If
-the argument names a visible catalog rather than an installed skill, it refreshes
-that catalog and stops.
+`update` refreshes tracking catalogs and reinstalls selected managed skills. A
+visible catalog name refreshes that catalog and stops; one list can mix both,
+and a name that is neither is an error.
 `install` without a name repairs declared requirements from current catalog
 state. `remove` only removes content that Repertoire can verify it manages.
 

@@ -31,8 +31,15 @@ path:
 ```bash
 repertoire stub list
 repertoire stub list common-stubs
+repertoire stub list common-stubs,graphify
 repertoire stub get common-stubs/editorconfig
+repertoire stub get common-stubs/editorconfig,common-stubs/gitattributes
 ```
+
+`stub list` and `stub get` accept a comma-separated list or several arguments,
+so one call can cover several installed skills or stubs. `stub list` takes skill
+names; `stub get` takes `<skill>/<stub>` ids. With several ids and `--raw`,
+Repertoire writes each asset's bytes to stdout in order.
 
 Repertoire prints the path and instructions for the agent. By default it does
 not copy, merge, execute, or print the asset itself. When the stub instructions

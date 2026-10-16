@@ -1,0 +1,14 @@
+---
+extends: default
+
+rules:
+  # Plain configuration, not front-matter documents. Requiring a `---` marker
+  # on every file adds noise without adding meaning, so it stays optional.
+  document-start: disable
+
+  # Descriptions and `instructions:` blocks are written as single long lines on
+  # purpose. Reflowing them is not free: a literal block scalar (`|`) gains a
+  # line break, and a folded one silently rejoins words. Keep a guard against
+  # runaway lines instead of the 80-column default.
+  line-length:
+    max: 130

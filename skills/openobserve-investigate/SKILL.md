@@ -26,6 +26,14 @@ actual MCP configuration.
 - Claude Desktop: `claude_desktop_config.json` (on macOS under
   `~/Library/Application Support/Claude/`).
 - Cursor: `~/.cursor/mcp.json`. VS Code: workspace `.vscode/mcp.json`.
+- OpenCode: `mcp.servers` in the global `~/.config/opencode/opencode.json(c)`
+  or a project `opencode.json(c)` / `.opencode/opencode.json(c)`. V1
+  configuration that places server names directly under `mcp`, with `type` and
+  `enabled` fields, still loads during migration, so inspect both shapes and
+  follow whichever one the file already uses. Run `opencode mcp list` for
+  connection state, but confirm against the config file and the tools actually
+  exposed in the session: the command can report no servers while a
+  project-scoped or V1-shaped entry is live.
 
 MCP configuration loads at session start. If a server is configured but its
 tools are absent from the session, the session predates the configuration —
@@ -51,6 +59,7 @@ repertoire stub get openobserve-investigate/claude-code-mcp
 repertoire stub get openobserve-investigate/claude-desktop-mcp
 repertoire stub get openobserve-investigate/cursor-mcp
 repertoire stub get openobserve-investigate/vscode-mcp
+repertoire stub get openobserve-investigate/opencode-mcp
 ```
 
 Follow the returned instructions and merge the asset into the existing client
@@ -71,10 +80,28 @@ copy an asset into place without first reading the destination file.
 6. Report the time range, streams, queries, returned evidence, gaps, and the
    distinction between facts and hypotheses.
 
-Use `agent_options.output_format="csv"` for compact tabular search results —
-but if a filtered query returns `total > 0` with empty `hits`, retry in JSON:
-CSV rendering silently drops hits on some filtered/ordered queries, and
-`total` is the match count, not proof rows arrived. Use
+Resource attributes are not standardized across exporters, even for the same
+vendor. One service may emit `service_project_path` while another emits only
+`service_project_folder`, so read the schema before filtering on either. Treat
+a `*_folder` attribute as the directory the server process was started in, not
+the path an individual operation targeted: a session-scoped folder can tag
+calls that acted on a different repository entirely.
+
+One instance and organization can hold telemetry from several projects at
+once — a shared server, collector, or agent host feeds them all into the same
+streams under a single session identity. Before filtering or aggregating,
+confirm which project attribute is populated, list its distinct values, and
+scope the query to the one you mean; otherwise counts, percentiles, and top-N
+silently mix every project the instance has seen. Prefer a full-path attribute
+over a basename-style `*_folder`.
+
+Prefer JSON for a first pass: rows arrive in `hits`. With
+`agent_options.output_format="csv"` (or `"md_table"`) the server instead returns
+the rows in a serialized `data` field and leaves `hits` empty, and the default
+`detail="summary"` projection drops `data` — so a CSV query yields column names
+and a correct `total` with no rows. Get `data` by asking for `detail="full"`
+(through `tools_call`), or simply keep JSON (`total` is the match count, not
+proof rows arrived). Use
 `agent_options.mode="partition"` for wide-range top-N or aggregation queries;
 do not split a large range into a client-side loop.
 
@@ -84,23 +111,37 @@ the source application. Profile them before filtering — see
 [references/investigation-playbook.md](references/investigation-playbook.md).
 
 Read [references/investigation-playbook.md](references/investigation-playbook.md)
-for query patterns, correlation guidance, and failure handling.
+for query patterns, correlation guidance, and failure handling. Read
+[references/query-language.md](references/query-language.md) for the SQL
+dialect, the function catalog, and the behaviours verified against a live
+instance.
 
 ## Use MCP tools
 
-Pinned tools normally include `StreamList`, `StreamSchema`, `SearchSQL`,
-`PrometheusRangeQuery`, `GetLatestTraces`, and `GetIncident`.
+The pinned set varies by OpenObserve version. Read `tools/list` from the
+connected server first and treat that response as authoritative. A typical set
+is `StreamList`, `StreamSchema`, `SearchSQL`, `PrometheusRangeQuery`, and
+`GetLatestTraces`, alongside `tool_search` and `tools_call`. Some builds add
+`GetIncident` or trace-graph tools; do not assume one is present.
 
-For other operations:
+Call a pinned tool by its exposed name instead of routing it through
+`tool_search` and `tools_call`, which are for capabilities that are not pinned:
 
 1. Call `tool_search` with the capability, such as `trace DAG` or `search
    around`, and inspect the returned schema.
 2. Call `tools_call` with `tool`, schema-matching `args`, and `detail` set to
    `summary` unless the complete response is necessary.
 
-Hosts prefix names with the configured server name, for example
-`mcp__openobserve__SearchSQL`. Treat schemas returned by the connected server as
-authoritative because versions differ.
+Argument shapes differ between builds even when the tool name is the same.
+Required fields are not always the obvious ones: `GetLatestTraces` in at least
+one build requires `org_id`, `stream_name`, `from`, `size`, `start_time`, and
+`end_time`, and rejects a call that omits the `from` offset. Read the schema the
+server returns before calling a tool for the first time.
+
+Hosts expose names differently. Claude Code prefixes with the server, for
+example `mcp__openobserve__SearchSQL`. OpenCode joins them with an underscore
+(`openobserve_SearchSQL`) and, under its default Code Mode, groups them as
+`tools.openobserve.SearchSQL`.
 
 Read [references/mcp-and-api.md](references/mcp-and-api.md) when configuring a
 client, calling JSON-RPC directly, parsing responses, or using the REST API.

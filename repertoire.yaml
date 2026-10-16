@@ -1,18 +1,21 @@
+---
 schema: 1
 catalog:
   name: phillarmonic
   description: Portable AI agent skills maintained by Phillarmonic
   skills:
+    ai-memory:
+      path: skills/ai-memory
     common-stubs:
       path: skills/common-stubs
     drun:
       path: skills/drun
       instructions:
         agents:
-        - id: drun-guidance
-          source: skills/drun/pointers/agents.md
-          destination: AGENTS.md
-          mode: markdown-section
+          - id: drun-guidance
+            source: skills/drun/pointers/agents.md
+            destination: AGENTS.md
+            mode: markdown-section
     graphify-docker:
       path: skills/graphify-docker
     graphifyignore:

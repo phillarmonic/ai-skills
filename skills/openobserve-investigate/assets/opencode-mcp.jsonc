@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "openobserve": {
+        "type": "remote",
+        "url": "https://your-instance/api/your-organization/mcp",
+        "oauth": false,
+        "headers": {
+          "Authorization": "{env:OPENOBSERVE_AUTHORIZATION}"
+        }
+      }
+    }
+  }
+}

@@ -47,9 +47,44 @@ the simpler predicates cannot express the filter.
   interval before querying evidence.
 - LLM traces: use session/user summary tools, then inspect per-session turns and
   the trace DAG rather than downloading all spans immediately.
+- `_timestamp` does not mean the same thing in every signal. A log record is
+  usually stamped when it is written (often at completion), while a span is
+  stamped at its start, so a slow request can appear in logs well after the
+  matching span begins. Pivot on correlation IDs and compare a span's own
+  `start_time`/`end_time`; do not read a duration off the log-to-span timestamp
+  delta.
 
 Keep all comparisons in UTC and state the exact bounds. A UI display timezone
 does not change the API's epoch-microsecond bounds.
+
+## Counting records
+
+One logical operation can emit more than one record. A single MCP request
+often produces a protocol-level record and a per-tool record, and a server span
+plus its tool span; the duplicates carry different dimensions, so a naive row
+count can report roughly double the real number of calls. When you count, filter
+on the dimension you mean rather than on rows, and remember a metric family may
+expose a bare stream alongside its `_count`/`_sum`/`_bucket` streams.
+
+## Scoping to a shared instance
+
+An organization is not a project. One instance commonly ingests several
+projects, folders, or repositories into the same stream — a shared server or
+collector tags every call it handles, whoever made it. Before filtering or
+aggregating, find the project identity attribute in the schema
+(`service_project_path`, `service_project_folder`, or a vendor equivalent),
+list its distinct values, and constrain the query to the one you mean:
+
+```sql
+SELECT <project_attr>, count(*) AS n FROM "app_logs"
+GROUP BY <project_attr> ORDER BY n DESC
+```
+
+Without that scope, a count, a percentile, or a top-N silently blends every
+project the instance has seen. Prefer a full-path attribute over a
+basename-style `*_folder`: the folder is only the directory a process started
+in, so two unrelated workloads can share it and one workload can appear under
+several folders.
 
 ## Cost and precision
 
@@ -57,7 +92,18 @@ does not change the API's epoch-microsecond bounds.
   and units.
 - Select columns instead of `SELECT *` after schema discovery.
 - Aggregate first when estimating blast radius.
-- Use CSV for tabular hits and summary detail for discovery.
+- Prefer JSON for a first pass: rows arrive in `hits`. With
+  `agent_options.output_format="csv"` (or `"md_table"`) the server instead puts
+  the rows in a single serialized `data` field and leaves `hits` empty, and the
+  default `detail="summary"` projection drops `data` — so a CSV query returns
+  column names and a correct `total` with no rows. This holds for every query
+  shape, not just filtered or ordered ones. Get `data` by asking for
+  `detail="full"` (through `tools_call`), or simply keep JSON.
+- Report the distribution, not just the mean: p50, p90, p95, and max. When the
+  maximum dwarfs p50, name the single outlier and its share of the total, since
+  one call can dominate a sum (a 180 s call was 86% of a 208 s tool total). A
+  mean alone hides that, and p95 can land below the mean when a single value is
+  extreme.
 - Use async search jobs only for genuinely long searches; discover their exact
   schemas with `tool_search`.
 
@@ -71,12 +117,32 @@ does not change the API's epoch-microsecond bounds.
   is pinned or available in every version.
 - Unknown stream/field: rerun `StreamList`/`StreamSchema` and apply any returned
   query suggestions.
+- Unknown SQL function: the query engine is DataFusion, not another SQL dialect.
+  There is no `datetime()`; render a timestamp with
+  `to_timestamp_micros(<micros>)` and bucket with
+  `date_trunc('hour', to_timestamp_micros(_timestamp))`. See
+  [query-language.md](query-language.md) for the dialect and function catalog.
+- Metric streams: each family is its own stream (`_count`, `_sum`, `_bucket`,
+  `_min`, `_max`). `StreamList` may also list the bare metric name, but
+  `SearchSQL` returns "Search stream not found" for it, so query a family
+  stream. Never sum a cumulative `_sum` or `_count` stream, because its rows
+  are counters; use PromQL `increase()`/`rate()` for a total, and read outcomes
+  from a label filter (for example `outcome = 'error_result'`) rather than from
+  a per-row status. A single family can span several services or tools through a
+  shared label, so scope it with a label selector before attributing a value to
+  one of them, and confirm a `_count` series increases monotonically before
+  trusting `rate()`/`histogram_quantile()`, which return `NaN` on a
+  non-monotonic or sparse counter.
+- Suspected silence: before concluding a source stopped emitting, read the
+  stream's own range with `StreamSchema` (`doc_time_min`, `doc_time_max`). A
+  narrow query window is indistinguishable from a stalled exporter.
 - Empty result: verify signal type, timestamp units, ingest delay, and bounds
   before concluding that no event occurred.
 - Empty `hits` with `total > 0`: `total` is the server-side match count; the
-  rows were found but not delivered. Drop `agent_options.output_format="csv"`
-  and retry in JSON (CSV rendering silently drops hits on some filtered or
-  ordered queries), and check `from`/`size` pagination before concluding
+  rows matched but were not delivered. The usual cause is a `csv`/`md_table`
+  `output_format`, whose rows live in a serialized `data` field that the default
+  `detail="summary"` projection omits: retry in JSON (drop `output_format`) or
+  request `detail="full"`. Check `from`/`size` pagination before concluding
   anything.
 - Zero-looking stream stats: `StreamList`/`StreamSchema` statistics
   (`doc_num`, `storage_size`) can report 0 on freshly created or stats-lagged

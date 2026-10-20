@@ -332,8 +332,9 @@ traps to know before writing code:
   type`, `when in ci/local/production/staging environment`.
 - `references/network-actions.md` — `ping`, `test connection`,
   `wait for service ... to be ready`, HTTP verbs.
-- `references/semantic-actions.md` — file/property/changelog/project-version
-  statements, SCM aliases, `use workdir`, `attached`, `!` negation.
+- `references/semantic-actions.md` — file values (`property`, `json`, `yaml`,
+  `toml`, `match`), changelog and project-version statements, SCM aliases,
+  `use workdir`, `attached`, `!` negation.
 - `references/tool-provisioning.md` — `provision`, version ranges,
   provisioning catalogs, `from tasks:` inheritance.
 - `references/progress-timers.md` — progress indicators and named timers.

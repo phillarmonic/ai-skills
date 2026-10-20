@@ -12,9 +12,14 @@ if file ".env" not exists:
 if folder "build" is empty:
 if file "./a.json" not matches file "./b.json":
 
-# Structured file values (property, json, yaml, regex match)
+# Structured file values (property, json, yaml, toml, regex match)
 get property "pluginVersion" from "gradle.properties" as $plugin_version
 update property "pluginVersion" in "gradle.properties" to "{$version}" or fail
+get json "/version" from "package.json" as $package_version
+update json "/version" in "package.json" to "{$version}" or add as string
+get yaml "chart.appVersion" from "Chart.yaml" as $chart_version
+get toml "package.version" from "Cargo.toml" as $crate_version
+update toml "project.version" in "pyproject.toml" to "{$version}" or fail
 update match "(?m)^VERSION=(?P<value>[^\r\n]+)$" in "VERSION.txt" to "{$version}" or fail
 
 # Project and changelog bookkeeping
@@ -55,6 +60,34 @@ download "https://api.github.com/zen" to "zen.txt" with auth bearer "{secret('gh
 open url "https://example.com/docs"
 open url "./coverage/index.html"
 ```
+
+## Structured file values
+
+Every format supports `get`, `check` and `update`:
+
+```text
+get <format> <selector> from <file> as <variable>
+check <format> <selector> in <file> (equals <value> | differs from <value>)
+update <format> <selector> in <file> to <value> (or fail | or add [as string|number|boolean])
+```
+
+| Format | Selector | Missing key |
+| --- | --- | --- |
+| `property` | exact key | `or add` adds a string |
+| `json` | RFC 6901 pointer, object members | `or add as ...` |
+| `yaml` | dot-separated mapping path | `or add as ...` |
+| `toml` | TOML dotted key | `or add as ...` |
+| `match` | Go regex with one `value` capture | `or fail` only |
+
+`property`, `json` and `match` edit in place and keep the surrounding bytes.
+`yaml` and `toml` decode the document and write it back through a serializer,
+so comments and the original layout are lost: TOML comes back with tables and
+keys sorted, single quotes, and arrays collapsed onto one line. Both are fine
+for a version bump, but expect a formatting diff on the first write.
+
+A `match` pattern has to match exactly once; the statement fails when it matches
+zero or several times, so a table-blind pattern is brittle next to a structured
+selector.
 
 ## Shell configuration
 

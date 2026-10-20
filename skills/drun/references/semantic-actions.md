@@ -28,6 +28,7 @@ update project version to "{$version}"
 promote changelog "CHANGELOG.md" to version "{$version}"
 # pin the date instead of today:
 promote changelog "CHANGELOG.md" to version "{$version}" on "2026-09-01"
+# re-running for a version that already has a section merges new entries into it
 
 # Git/SCM: declare an alias in the project block, then reference it
 #   scm:
@@ -60,6 +61,14 @@ download "https://api.github.com/zen" to "zen.txt" with auth bearer "{secret('gh
 open url "https://example.com/docs"
 open url "./coverage/index.html"
 ```
+
+## Opening things and folder trust
+
+`open url` refuses to launch anything from a folder that is not trusted on this
+machine. Trust it once with `xdrun cmd:trust` (or `xdrun cmd:trust /path/to`) and
+revoke with `xdrun cmd:untrust`; trust is stored in `~/.drun/trusted.yml` and a
+trusted parent covers its children. On a headless host, over SSH, or in CI it
+prints the target instead of failing, and a dry run skips the check entirely.
 
 ## Structured file values
 

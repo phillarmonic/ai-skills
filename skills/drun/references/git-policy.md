@@ -22,3 +22,20 @@ project "example" version "1.0":
 
 For the `scm:` alias declaration used by semantic git actions such as
 `git ensure ... from <alias>`, see `semantic-actions.md`.
+
+## Validating inside a task
+
+`git validate` checks the repository against the policy without waiting for a
+hook, so a `ci` or pre-flight task can fail on the same rules the hooks enforce:
+
+```drun
+task "pre-flight" means "Check conventions before pushing":
+  git validate branch
+  git validate commit
+  git validate signed
+  git validate all
+```
+
+The scopes are `branch`, `commit`, `signed` and `all`. The long names
+(`branch_name`, `commit_message`, `signed_commits`) appear in the upstream docs
+but the parser rejects them.

@@ -96,8 +96,10 @@ Rules for `with` arguments (these are the ones that bite):
 - Undeclared `with` keys are silently ignored. When a value "doesn't take",
   check the callee's `given`/`requires` parameter names for a mismatch.
 - Variables set inside the called task propagate back into the caller.
-- `depends on a and b` takes no arguments; use `call task` when you need to
-  pass values.
+- `depends on a, b` runs the listed tasks first; comma-separated dependencies
+  may run in parallel, while `depends on build then publish` asks for sequential
+  execution. It takes no arguments, so use `call task` when you need to pass
+  values.
 
 Ordering note: compute values with `set` **before** the call, not after —
 this is also the required order for parameter forwarding:
@@ -170,6 +172,10 @@ run "a shell command that will require interacting with" attached
 
 Without `attached`, an interactive command will hang or fail waiting for input
 that can never arrive. Attached mode works only with single-line `run`.
+
+`exec "program"` is the escape hatch when the shell itself is the problem: it
+runs the program directly instead of through shell command parsing, so pipes,
+globs and a leading `!` negation do not apply.
 
 ## Interactive prompts and confirmations
 
@@ -253,6 +259,10 @@ Patterns that repeat across Phillarmonic specs — follow them in our repos:
   `promote changelog` → `update project version to`.
 - `xdrun ci --task-mode=normal` overrides buffering at runtime when you need
   to watch a ci-mode task stream; `--task-mode=ci` does the reverse.
+- `xdrun ci --ci-summary=json` replaces the text summary with one JSON line
+  carrying `task`, `status`, `duration_ms` and a `steps` array (`step`, optional
+  `label`, `status`, `duration_ms`); `--ci-summary=off` leaves only the banners
+  and the exit code.
 
 ## Writing good specs
 

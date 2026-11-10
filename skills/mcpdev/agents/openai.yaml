@@ -1,0 +1,6 @@
+interface:
+  display_name: "mcpdev"
+  short_description: "Test MCP servers with the mcpdev CLI"
+  default_prompt: >-
+    Use $mcpdev to inspect, call, snapshot, diff, scenario-test, or watch
+    this MCP server from the command line without opening an Inspector UI.

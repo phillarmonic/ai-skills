@@ -1,0 +1,72 @@
+schema_version: 1
+# Copyable smoke suite. Replace the target, tool names, and assertion paths.
+# Every assertion path reads the step response envelope (see
+# references/scenarios.md > "Assertion data model"), so tool/inspect fields live
+# under $.result, never at the bare root.
+name: server-smoke
+target:
+  # Exactly one of command (argv array) / url / profile. Point at a small
+  # fixture workspace, not a huge repo, when the server indexes on connect.
+  command: ["./bin/server", "serve", "mcp"]
+protocol: auto
+defaults:
+  # Raise these when the server builds or indexes during the handshake;
+  # a slow handshake is a connection failure (exit 10), not an assertion.
+  timeout: 60s
+  connect_timeout: 60s
+secrets:
+  # Only {from_env: NAME}. Interpolate as ${secrets.workspace}. No literals.
+  workspace:
+    from_env: MCPDEV_WORKSPACE
+cases:
+  - name: inspect-all-complete
+    steps:
+      - inspect:
+          kind: all            # tools | prompts | resources | templates | all
+        assert:
+          - equal:
+              path: $.ok
+              value: true
+          # inspect lists are FLAT arrays here ($.result.tools[*]), even though
+          # `mcpdev --format json inspect` nests them under .result.tools.items.
+          - json_path:
+              path: $.result.tools[*]
+              exists: true
+              count: 12          # pin the exact tool count to catch drift
+          - contains:
+              path: $.result.tools[*].name
+              value: status
+
+  - name: call-happy-path
+    steps:
+      - call:
+          tool: status           # the step key is `tool`, never `name`
+          arguments: {}
+        assert:
+          - equal:
+              path: $.result.isError   # false on success, true on a tool error
+              value: false
+          - json_path:
+              path: $.result.structured.revision   # the tool's structuredContent
+              exists: true
+          - contains:
+              path: $.result.text                  # concatenated text content
+              value: revision
+          # latency is an assertion, a list item under assert — not a step key.
+          - latency:
+              max: 30s
+
+  - name: call-with-workspace-arg
+    steps:
+      - call:
+          tool: search
+          arguments:
+            query: Gateway
+            root: "${secrets.workspace}"   # interpolation only in strings
+        assert:
+          - equal:
+              path: $.result.isError
+              value: false
+          - json_path:
+              path: $.result.structured.hits[*]
+              exists: true

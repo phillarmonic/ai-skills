@@ -1,0 +1,62 @@
+schema_version: 1
+# Copyable error suite. Assert that failures stay locatable: a structured code,
+# and a message that names the offending field or argument.
+#
+# A server tool that returns isError:true is still an RPC success. Declare it
+# with expect_failure.category: tool_error so the miss (a silent pass) is caught.
+name: server-errors
+target:
+  command: ["./bin/server", "serve", "mcp"]
+protocol: auto
+defaults:
+  timeout: 60s
+  connect_timeout: 60s
+cases:
+  - name: missing-required-arg
+    steps:
+      - call:
+          tool: search
+          arguments: {}          # omit the required field on purpose
+        expect_failure:
+          category: tool_error   # usage | connection | protocol | assertion |
+                                 # interface_change | incomplete | internal |
+                                 # tool_error
+        assert:
+          - equal:
+              path: $.result.isError
+              value: true
+          - equal:
+              path: $.result.structured.code
+              value: INVALID_ARGUMENT
+          - contains:
+              path: $.result.structured.message
+              value: query        # the message must name the missing field
+
+  - name: invalid-arg-value
+    steps:
+      - call:
+          tool: describe
+          arguments:
+            language: klingon
+        expect_failure:
+          category: tool_error
+        assert:
+          - equal:
+              path: $.result.isError
+              value: true
+          - contains:
+              path: $.result.text
+              value: language
+
+  # A non-existent tool is a PROTOCOL failure (exit 20), not a tool_error:
+  # the server never runs a handler. Use error_category to prove the class.
+  - name: unknown-tool-is-protocol
+    steps:
+      - call:
+          tool: not_a_real_tool
+          arguments: {}
+        expect_failure:
+          category: protocol
+        assert:
+          - error_category:
+              equals: protocol

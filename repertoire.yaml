@@ -20,6 +20,14 @@ catalog:
       path: skills/graphify-docker
     graphifyignore:
       path: skills/graphifyignore
+    mcpdev:
+      path: skills/mcpdev
+      instructions:
+        agents:
+          - id: mcpdev-guidance
+            source: skills/mcpdev/pointers/agents.md
+            destination: AGENTS.md
+            mode: markdown-section
     openobserve-investigate:
       path: skills/openobserve-investigate
     repertoire:

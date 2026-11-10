@@ -1,0 +1,22 @@
+# Copyable mcpdev config. Nearest mcpdev.toml / .mcpdev.toml wins, then
+# ~/.config/mcpdev/config.toml. Flags beat MCPDEV_* env, which beats these files.
+version = 1
+protocol = "auto"
+timeout = "60s"
+connect_timeout = "60s"
+
+# A named target for `mcpdev --profile stdio ...`. `command` is an argv array;
+# `command = "go run ."` (a string) is invalid.
+#
+# Memory / startup safety: if the server indexes or builds a graph on connect,
+# point it at a SMALL fixture workspace and disable any watcher so it never
+# loads a whole repo (which can OOM the host and blow the handshake timeout).
+[profiles.stdio]
+command = ["./bin/server", "serve", "mcp", "--watch=false", "--root", "testdata/fixtures/small"]
+protocol = "auto"
+
+# Streamable HTTP target. Put tokens in header_env or ${TOKEN:?}, never as a
+# committed literal. --insecure is never implied by a URL.
+[profiles.http]
+url = "http://127.0.0.1:8080/mcp"
+# header_env = { Authorization = "MCP_TOKEN" }

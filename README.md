@@ -13,6 +13,7 @@ A catalog of portable AI agent skills maintained by Phillarmonic.
 | `drun`                    | Use when working with drun specs or xdrun automation: tasks, parameters, platforms, interpolation, CI, and hooks. |
 | `graphify-docker`         | Run graphify and its MCP server through the phillarmonic/graphify-docker image.                                   |
 | `graphifyignore`          | Author and debug `.graphifyignore` files; scope a graphify corpus and manage LLM-free vs LLM phases.              |
+| `mcpdev`                  | Inspect, call, snapshot, diff, and scenario-test MCP servers; watch a rebuild without restarting your agent.       |
 | `openobserve-investigate` | Investigate logs, metrics, traces, incidents, and stream metadata through OpenObserve MCP or its HTTP API.        |
 | `slidev`                  | Build Slidev developer slide decks (vendored from upstream `slidevjs/slidev`, MIT).                               |
 
@@ -52,6 +53,21 @@ pairs; repeatable `--override name=path` flags win over environment values.
 return to the hosted catalog.
 
 Every listed path must be contained in this repository and contain an Agent Skills-compatible `SKILL.md`.
+
+## mcpdev
+
+[mcpdev](https://phillarmonic.github.io/mcpdev/) is a command-line client for MCP servers: inspect, call, snapshot,
+diff, scenario-test, and watch a rebuild without restarting an AI harness. Install the skill in a repository that
+ships or tests an MCP server:
+
+```shell
+repertoire add mcpdev --catalog phillarmonic
+```
+
+The skill carries the CLI contract — target selection, stdout/stderr rules, the exit classes `2/10/20/30/40/60/70`,
+and the `setup-mcpdev` GitHub Action — plus copyable `mcpdev.toml` profiles, smoke and error suites, and
+protocol/failure references. It also installs an `AGENTS.md` pointer so an agent reaches for `mcpdev` before
+hand-rolling a client.
 
 ## OpenObserve investigation
 

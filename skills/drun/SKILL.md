@@ -98,8 +98,10 @@ Rules for `with` arguments (these are the ones that bite):
 - Undeclared `with` keys are silently ignored. When a value "doesn't take",
   check the callee's `given`/`requires` parameter names for a mismatch.
 - Variables set inside the called task propagate back into the caller.
-- `depends on a and b` takes no arguments; use `call task` when you need to
-  pass values.
+- `depends on a, b` runs the listed tasks first; comma-separated dependencies
+  may run in parallel, while `depends on build then publish` asks for sequential
+  execution. It takes no arguments, so use `call task` when you need to pass
+  values.
 
 Ordering note: compute values with `set` **before** the call, not after —
 this is also the required order for parameter forwarding:
@@ -172,6 +174,10 @@ run "a shell command that will require interacting with" attached
 
 Without `attached`, an interactive command will hang or fail waiting for input
 that can never arrive. Attached mode works only with single-line `run`.
+
+`exec "program"` is the escape hatch when the shell itself is the problem: it
+runs the program directly instead of through shell command parsing, so pipes,
+globs and a leading `!` negation do not apply.
 
 ## Interactive prompts and confirmations
 
@@ -255,10 +261,13 @@ Patterns that repeat across Phillarmonic specs — follow them in our repos:
   `promote changelog` → `update project version to`.
 - `xdrun ci --task-mode=normal` overrides buffering at runtime when you need
   to watch a ci-mode task stream; `--task-mode=ci` does the reverse.
-- A ci run ends with a per-step verdict (`STEP=<slug> STATUS=passed|failed`
-  plus a `CI_STATUS=` line). Tune it with `--ci-summary=text` (default),
-  `--ci-summary=json` for a single machine-readable line, or
-  `--ci-summary=off` when only the exit code matters.
+- A ci run that used `step` ends with a per-step verdict: one
+  `STEP=<slug> STATUS=passed|failed DURATION_MS=...` line per step plus a
+  `CI_STATUS=` line aggregating the run. Tune it with `--ci-summary=json` for a
+  single machine-readable line carrying `task`, `status`, `duration_ms` and a
+  `steps` array (`step`, optional `label`, `status`, `duration_ms`), or
+  `--ci-summary=off` to leave only the banners and the exit code. Details in
+  `references/ci-mode.md`.
 
 ## Writing good specs
 
@@ -340,8 +349,9 @@ traps to know before writing code:
   type`, `when in ci/local/production/staging environment`.
 - `references/network-actions.md` — `ping`, `test connection`,
   `wait for service ... to be ready`, HTTP verbs.
-- `references/semantic-actions.md` — file/property/changelog/project-version
-  statements, SCM aliases, `use workdir`, `attached`, `!` negation.
+- `references/semantic-actions.md` — file values (`property`, `json`, `yaml`,
+  `toml`, `match`), changelog and project-version statements, SCM aliases,
+  `use workdir`, `attached`, `!` negation.
 - `references/tool-provisioning.md` — `provision`, version ranges,
   provisioning catalogs, `from tasks:` inheritance.
 - `references/progress-timers.md` — progress indicators and named timers.

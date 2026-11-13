@@ -28,6 +28,18 @@ pnpm run export       # Export to PDF (requires playwright-chromium)
 
 **Verify**: After `pnpm run dev`, confirm slides load at `http://localhost:3030`. After `pnpm run export`, check the output PDF exists in the project root.
 
+## Layout review before delivery
+
+A successful build or export does not establish that the slides look correct. Inspect every slide visually in the browser and in each requested output format, including intermediate click states when exported.
+
+- Reserve separate areas for headings, body content, decorative images, logos and footers. Check text against the visible artwork, not just its image rectangle: transparent padding can hide collisions.
+- Check the longest title, subtitle and bullet text for extra wrapping. Keep text clear of other text, rules and visual elements, with consistent margins and enough space above footers and legal blocks.
+- Review alignment, bullet indentation, line spacing and content balance across the deck. Check both edges of each column and the bottom of each text box for clipping or overflow.
+- Wait for fonts and assets to load before capturing screenshots. Inspect screenshots at presentation size; DOM snapshots and text extraction alone cannot reveal overlapping or clipped elements.
+- Fix layout problems by shortening copy, splitting a slide or adjusting the available text area first. Preserve readable type sizes and the template's visual hierarchy rather than shrinking the entire slide to hide overflow.
+- For editable PowerPoint, follow the [export review](references/core-exporting.md#review-exported-layout). Recheck the exported file after every correction and disclose any output format you could not visually inspect.
+- Track review coverage by slide and output format, including exported click states. After corrections, recheck affected slides, then visually review the complete final deck before declaring it validated. Report partial coverage explicitly.
+
 ## Basic Syntax
 
 ```md

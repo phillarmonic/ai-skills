@@ -36,6 +36,20 @@ slidev export --format pptx-editable  # native shapes, selectable text
 
 `pptx-editable` measures the rendered slides and rebuilds them as PowerPoint shapes. SVG (including Mermaid), canvas, iframes, KaTeX formulas, gradients and CSS filters stay pictures, and any slide that cannot be rebuilt falls back to the image export on its own. Fonts are named, not embedded. `--per-slide` is not supported with it.
 
+### Review exported layout
+
+Open the generated file in the target application or render it with a compatible office renderer, then visually inspect every slide. Browser screenshots validate the browser layout only. A successful export, a valid ZIP package or selectable text does not confirm that the PowerPoint layout matches it.
+
+Confirm that the viewer opened the exact regenerated artifact, using its path and modification time or digest. If the application may retain an older open document, open a uniquely named copy of the latest export. Keep the original untouched and verify that any PDF or images used for review were actually produced from that copy; an acknowledged save command alone does not establish this.
+
+Treat repair, recovery or unreadable-content warnings as failed validation. Investigate the export or post-processing step and regenerate the file until it opens without repair. Check that the expected text, bullets and shapes survived, since a repaired presentation can silently lose content. When diagnosing generated DrawingML, check that geometry coordinates are integers and that required XML structures remain valid.
+
+Editable text may wrap differently because of font substitution, font metrics, text-box margins and PowerPoint's line-spacing rules. Check that the intended fonts are available in the viewing environment. Pay particular attention to cover titles and subtitles near artwork, long bullets near the right edge, nested list indentation and text above footers.
+
+Check for text crossing decorative elements, overlapping another text box, clipping at slide boundaries or acquiring an extra line that crowds the content below. Compare slide images from the exported file with the browser reference. Confirm that representative headings and body lists remain editable, since individual slides may fall back to images.
+
+Correct the source layout or export conversion, regenerate the file and inspect the affected slides again. Record which slides and output formats were checked, then review the complete final artifact before reporting it as validated. If no compatible renderer is available, state that visual validation of the exported file remains unverified; do not report the layout as checked based only on the browser preview.
+
 ### PNG Export
 
 ```bash

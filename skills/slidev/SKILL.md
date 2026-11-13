@@ -17,6 +17,15 @@ Web-based slides maker built on Vite, Vue, and Markdown.
 - Export to PDF, PPTX, or host as SPA
 - Code walkthroughs for developer talks or workshops
 
+## Package manager and disk usage
+
+Prefer PNPM for new Slidev projects and templates that do not already mandate a package manager. Its shared content-addressable store reuses package contents across projects through links or filesystem clones where supported, reducing duplicate dependency storage. Projects still have a local `node_modules` layout, and build outputs, caches and browser downloads can consume additional space.
+
+- Check the project's `packageManager` field, lockfile and repository instructions before installing. Respect an existing package-manager convention; do not migrate it or create a competing lockfile without approval.
+- Use `pnpm install`, `pnpm add` and `pnpm run` for PNPM projects. Use `pnpm exec` for installed tools rather than `npx` or repeated one-off downloads. Use `pnpm install --frozen-lockfile` when reproducing an existing lockfile without dependency changes.
+- Reuse the shared PNPM store. Do not copy a template's `node_modules` directory or configure a separate store per presentation by default. Keep `pnpm-lock.yaml` with the project.
+- If PNPM is unavailable, report the prerequisite and ask before switching package managers. Do not silently fall back to `npm install`. Disk-space concerns do not authorize deleting other projects, pruning shared stores or clearing browser caches.
+
 ## Quick Start
 
 ```bash

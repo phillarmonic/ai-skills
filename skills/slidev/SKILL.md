@@ -46,7 +46,7 @@ A successful build or export does not establish that the slides look correct. In
 - Review alignment, bullet indentation, line spacing and content balance across the deck. Check both edges of each column and the bottom of each text box for clipping or overflow.
 - Wait for fonts and assets to load before capturing screenshots. Inspect screenshots at presentation size; DOM snapshots and text extraction alone cannot reveal overlapping or clipped elements.
 - Fix layout problems by shortening copy, splitting a slide or adjusting the available text area first. Preserve readable type sizes and the template's visual hierarchy rather than shrinking the entire slide to hide overflow.
-- For editable PowerPoint, follow the [export review](references/core-exporting.md#review-exported-layout). Recheck the exported file after every correction and disclose any output format you could not visually inspect.
+- Before exporting PDF or PPTX, read and follow the [export review](references/core-exporting.md#review-exported-layout), including spacing and editable-text checks where applicable. Recheck the exported file after every correction and disclose any output format you could not visually inspect.
 - Track review coverage by slide and output format, including exported click states. After corrections, recheck affected slides, then visually review the complete final deck before declaring it validated. Report partial coverage explicitly.
 
 ## Basic Syntax
